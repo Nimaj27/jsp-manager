@@ -1743,6 +1743,7 @@ function subscribeFirebase(){
     if(d.evaluations) saveEvals(d.evaluations);
     saveCache();
     renderAll();
+    setTimeout(function(){ var el=document.getElementById('accueil-content'); if(el) renderAccueil(); }, 300);
     showToast('🔄 Synchronisé');
   }, function(err){
     console.warn('Firebase sync error:', err.message);
