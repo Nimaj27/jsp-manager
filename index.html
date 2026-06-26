@@ -4,8 +4,8 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="JSP Manager">
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="/jsp-manager/manifest.json">
+  <link rel="apple-touch-icon" href="/jsp-manager/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0a0f1e">
 <meta charset="UTF-8">
@@ -604,7 +604,7 @@ function logoutUser(){
 // ── Enregistrement Service Worker PWA ──────────────────────
 if('serviceWorker' in navigator){
   window.addEventListener('load', function(){
-    navigator.serviceWorker.register('./sw.js')
+    navigator.serviceWorker.register('/jsp-manager/sw.js')
       .then(function(reg){
         console.log('SW enregistré:', reg.scope);
         // Détecter mise à jour disponible
@@ -2572,6 +2572,7 @@ function closeAppel(){
 }
 
 function renderSeances(){
+  const today = new Date().toISOString().slice(0,10);
   fillSaisonFilter('seance-filter-saison', seances);
   const fSaison = document.getElementById('seance-filter-saison').value;
   const fType = document.getElementById('seance-filter-type').value;
