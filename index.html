@@ -1,4 +1,52 @@
 <!DOCTYPE html>
+<!-- ╔══════════════════════════════════════════════════════════════════╗
+     ║           JSP MANAGER v5 — Section Pacy-sur-Eure               ║
+     ║                    index.html (fichier unique)                  ║
+     ╠══════════════════════════════════════════════════════════════════╣
+     ║  STRUCTURE DU FICHIER                                           ║
+     ║                                                                 ║
+     ║  L.1       → Doctype + commentaire carte                        ║
+     ║  L.50      → <head> : meta, CSS variables, styles              ║
+     ║  L.400     → <body> : HTML structure                            ║
+     ║    L.420   → Header + navbar onglets                            ║
+     ║    L.450   → Page 🏠 Accueil (tableau de bord)                 ║
+     ║    L.530   → Page 👤 JSP (liste + modals)                      ║
+     ║    L.660   → Page 📅 Séances (liste + modals)                  ║
+     ║    L.760   → Page 🏃 Sport (classements + challenge qualité)   ║
+     ║    L.850   → Page 🏆 Concours (RTN/RTD + grilles)              ║
+     ║    L.920   → Page 📝 Séquenceur (planification séances)        ║
+     ║    L.980   → Page 🎓 Formation (référentiel + évaluations)     ║
+     ║    L.1050  → Page 📊 Suivi (stats + calendrier + historique)   ║
+     ║    L.1150  → Panneau ⚙️ Paramètres                             ║
+     ║    L.1350  → Overlay 📋 Mode Appel plein écran                 ║
+     ║                                                                 ║
+     ║  SCRIPTS                                                        ║
+     ║    L.493   → Script type="module" : Firebase SDK               ║
+     ║    L.526   → Script inline header : toggleTheme, openSettings  ║
+     ║    L.597   → Script PWA : Service Worker + install prompt      ║
+     ║    L.1591  → Script 0 : Couche données Firebase + cache        ║
+     ║    L.1868  → Script 1 : QR Code + Import CSV                   ║
+     ║    L.2000  → Script 2 : Tableau de bord (renderAccueil)        ║
+     ║    L.2248  → Script 3 : JSP (render + modal + CRUD)            ║
+     ║    L.2447  → Script 4 : Mode Appel plein écran                 ║
+     ║    L.2574  → Script 5 : Séances + Convocations WhatsApp        ║
+     ║    L.3362  → Script 5 (suite) : Sport + Challenge Qualité      ║
+     ║    L.4254  → Script 5 (suite) : Concours RTN/RTD               ║
+     ║    L.4911  → Script 6 : Timeline + Alertes + PDF fiches        ║
+     ║    L.5416  → Script 7 : Séquenceur + Bilan annuel PDF          ║
+     ║    L.6483  → Script 7 (suite) : Historique + Notifications     ║
+     ║    L.6699  → Script 7 (suite) : Suivi + Calendrier             ║
+     ║                                                                 ║
+     ║  FIREBASE                                                       ║
+     ║    Projet   : base-jsp-pacy (europe-west1)                      ║
+     ║    Auth     : Google (popup desktop, redirect Android)          ║
+     ║    Firestore: sections/pacy → jsps,seances,sports,concours...  ║
+     ║    FCM VAPID: BHLzxMjZe900fXF3hcK2xhE6Act3N2pBjvGpWplSI...    ║
+     ║                                                                 ║
+     ║  DÉPLOIEMENT                                                    ║
+     ║    GitHub Pages : nimaj27.github.io/jsp-manager/               ║
+     ║    Netlify      : jsp-pacy.netlify.app (renouvellement 1er/mois)║
+     ╚══════════════════════════════════════════════════════════════════╝ -->
 <html lang="fr">
 <head>
   <meta name="mobile-web-app-capable" content="yes">
