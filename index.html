@@ -2010,7 +2010,7 @@ function renderAccueil(){
   }
 
   var el = document.getElementById('accueil-content');
-  if(!el) return;
+  if(!el){ setTimeout(renderAccueil, 200); return; }
 
   var html = '';
   var actifs = JSPs.filter(function(j){return j.statut==='Actif';});
