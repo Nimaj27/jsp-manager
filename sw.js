@@ -46,11 +46,11 @@ self.addEventListener('notificationclick', function(event) {
   event.waitUntil(
     clients.matchAll({type:'window', includeUncontrolled:true}).then(function(clientList){
       for(var i=0;i<clientList.length;i++){
-        if(clientList[i].url.includes('jsp-pacy.netlify.app') && 'focus' in clientList[i]){
+        if(clientList[i].url.includes('nimaj27.github.io/jsp-manager') && 'focus' in clientList[i]){
           return clientList[i].focus();
         }
       }
-      return clients.openWindow('https://jsp-pacy.netlify.app');
+      return clients.openWindow('https://nimaj27.github.io/jsp-manager/');
     })
   );
 });
@@ -59,7 +59,7 @@ self.addEventListener('notificationclick', function(event) {
 self.addEventListener('install', function(event){
   event.waitUntil(
     caches.open(CACHE_NAME).then(function(cache){
-      return cache.addAll(['/', '/index.html', '/manifest.json'])
+      return cache.addAll(['/jsp-manager/', '/jsp-manager/index.html', '/jsp-manager/manifest.json'])
         .catch(function(e){ console.warn('SW precache:', e); });
     }).then(function(){ return self.skipWaiting(); })
   );
