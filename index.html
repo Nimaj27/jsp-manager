@@ -1579,7 +1579,7 @@ function installPWA(){
 </div>
 
 <!-- ══════════ SETTINGS PANEL ══════════ -->
-<div class="overlay" id="settings-overlay" onclick="closeSettings()"></div>
+<div class="overlay" id="settings-overlay" onclick="if(event.target===this)closeSettings()"></div>
 <div class="panel-slide" id="settings-panel">
   <h2>⚙️ Paramètres</h2>
   <div class="set-block">
@@ -1616,9 +1616,11 @@ function installPWA(){
     <label>📥 Import JSP depuis CSV</label>
     <p>Importe une liste de JSP depuis un fichier Excel/CSV. Colonnes requises : Nom, Prenom, Section.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn btn-blue btn-sm" onclick="document.getElementById('csv-import-file').click()">📂 Choisir un fichier CSV</button>
+      <button class="btn btn-blue btn-sm" onclick="event.stopPropagation();document.getElementById('csv-import-file').click()">📂 Choisir un fichier CSV</button>
       <button class="btn btn-ghost btn-sm" onclick="downloadCSVTemplate()">⬇️ Modèle CSV</button>
-      <input type="file" id="csv-import-file" accept=".csv,.txt" style="display:none" onchange="importJSPFromCSV(event)">
+      <input type="file" id="csv-import-file" accept=".csv,.txt" style="display:none" 
+  onchange="importJSPFromCSV(event)"
+  onclick="event.stopPropagation()">
     </div>
     <div id="csv-import-result" style="margin-top:8px;font-size:12px;"></div>
   </div>
