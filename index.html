@@ -1622,6 +1622,18 @@ function installPWA(){
     </div>
     <div id="csv-import-result" style="margin-top:8px;font-size:12px;"></div>
   </div>
+  <div class="set-block">
+    <label>🔔 Notifications push</label>
+    <p style="font-size:12px;color:var(--txt-muted);margin-bottom:8px">Recevez une notification quand un formateur modifie les données, même appli fermée.</p>
+    <button id="notif-toggle-btn" class="btn btn-blue" onclick="toggleNotifications()">🔕 Activer les notifications</button>
+  </div>
+  <div class="set-block">
+    <label>📱 Installer l'appli</label>
+    <p style="font-size:12px;color:var(--txt-muted);margin-bottom:8px">Installez JSP Manager sur votre écran d'accueil.</p>
+    <button id="pwa-install-btn" class="btn btn-blue" onclick="installPWA()" style="display:none">📲 Installer sur l'écran d'accueil</button>
+    <div id="pwa-ios-hint" style="font-size:12px;color:var(--txt-muted);display:none">Sur iOS : ⬆️ Partager → "Sur l'écran d'accueil"</div>
+    <script>if(/iPhone|iPad|iPod/i.test(navigator.userAgent)&&!navigator.standalone){var h=document.getElementById('pwa-ios-hint');if(h)h.style.display='block';}</script>
+  </div>
   <div class="set-block" style="border-bottom:none">
     <label style="color:var(--danger)">Zone dangereuse</label>
     <p>Efface tous les JSP, séances et données de la section courante.</p>
@@ -1997,8 +2009,9 @@ function importJSPFromCSV(event){
 function parseCSVJSP(text){
   var lines = text.split(/\r?\n/).filter(function(l){return l.trim();});
   if(lines.length < 2) return {error:'Fichier vide ou sans données'};
-  var headers = lines[0].split(',').map(function(h){return h.trim().toLowerCase();});
-  var nomIdx    = headers.findIndex(function(h){return h.includes('nom');});
+  var sep = lines[0].includes(';') ? ';' : ',';
+  var headers = lines[0].split(sep).map(function(h){return h.trim().toLowerCase().replace(/^\uFEFF/,'');});
+  var nomIdx    = headers.findIndex(function(h){return h.includes('nom') && !h.includes('prenom') && !h.includes('numero');});
   var prenomIdx = headers.findIndex(function(h){return h.includes('prenom')||h.includes('prénom');});
   if(nomIdx<0||prenomIdx<0) return {error:'Colonnes Nom et Prenom requises'};
   var sexeIdx    = headers.findIndex(function(h){return h.includes('sexe');});
@@ -2008,7 +2021,7 @@ function parseCSVJSP(text){
   var notesIdx   = headers.findIndex(function(h){return h.includes('note');});
   var jsps = [];
   for(var i=1;i<lines.length;i++){
-    var cols = lines[i].split(',').map(function(c){return c.trim().replace(/^"|"$/g,'');});
+    var cols = lines[i].split(sep).map(function(c){return c.trim().replace(/^"|"$/g,'');});
     var nom = cols[nomIdx]||'';
     var prenom = cols[prenomIdx]||'';
     if(!nom||!prenom) continue;
@@ -6726,24 +6739,7 @@ function showSyncNotification(user, action){
 }
 
 // ── Ajouter bouton notification dans les settings ────────────
-function openSettings(){
-  var sc=document.getElementById('set-club');
-  var sd=document.getElementById('set-duree');
-  if(sc) sc.value=localStorage.getItem('jsp_club_name')||'';
-  if(sd) sd.value=localStorage.getItem('jsp_duree')||'20';
-  var accesEl=document.getElementById('settings-acces');
-  if(accesEl){
-    var isChef=(typeof currentUserRole!=='undefined'&&currentUserRole==='chef');
-    accesEl.style.display=isChef?'block':'none';
-    if(isChef&&typeof loadUsersList==='function') loadUsersList();
-  }
-  // Vérifier si notifications déjà accordées
-  if('Notification' in window && Notification.permission === 'granted' && _fcmToken){
-    updateNotifBtn(true);
-  }
-  document.getElementById('settings-panel').classList.add('open');
-  document.getElementById('settings-overlay').classList.add('open');
-}
+// openSettings — définie dans script inline header
 
 function renderSuivi(){
   fillSaisonFilter('suivi-filter-saison', [...seances,...sports,...concours]);
