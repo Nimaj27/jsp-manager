@@ -553,10 +553,17 @@ table.tbl tr:hover td{background:var(--card);}
   <div id="auth-error" style="color:#ff6b6b;font-size:12px;max-width:300px;text-align:center;line-height:1.5;"></div>
   <div id="auth-hint" style="font-size:11px;color:#556;margin-top:6px;text-align:center;max-width:280px;line-height:1.5">
     Accès réservé aux formateurs JSP Pacy-sur-Eure<br>
-    <span id="safari-hint" style="display:none;color:#8899bb">
-      Sur Safari iOS : autorise les popups dans<br>Réglages → Safari → désactive "Bloquer les pop-ups"
+    <span id="pwa-hint" style="display:none;color:#8899bb">
+      Si l'appli est installée sur votre écran d'accueil,<br>
+      ouvrez d'abord l'appli dans Safari/Chrome puis connectez-vous.
     </span>
   </div>
+  <script>
+    if(window.navigator.standalone===true||window.matchMedia('(display-mode:standalone)').matches){
+      var h=document.getElementById('pwa-hint');
+      if(h) h.style.display='inline';
+    }
+  </script>
   <script>
     // Afficher le conseil Safari sur iOS
     if(/iPhone|iPad|iPod/i.test(navigator.userAgent)){
@@ -622,36 +629,39 @@ function closeSettings(){
 }
 function loginGoogle(){
   if(!window._fb){showToast('⚠️ Firebase non chargé');return;}
+
+  // Mode PWA standalone — ouvrir dans le navigateur pour la connexion
+  var isStandalone = window.navigator.standalone === true ||
+    window.matchMedia('(display-mode: standalone)').matches;
+  if(isStandalone){
+    // Sauvegarder l'intention de connexion et ouvrir dans le navigateur
+    sessionStorage.setItem('jsp_login_pending', '1');
+    var url = window.location.href.replace(/\?.*$/, '');
+    window.open(url + '?login=1', '_blank');
+    showToast('Connectez-vous dans le navigateur qui vient de s\'ouvrir');
+    return;
+  }
+
   var fb=window._fb;
   var provider=new fb.GoogleAuthProvider();
   var ua=navigator.userAgent;
   var isIOS=/iPhone|iPad|iPod/i.test(ua);
   var isAndroid=/Android/i.test(ua);
+  var isBrave=navigator.brave!==undefined;
+  var isChrome=/Chrome/i.test(ua)&&!isBrave&&!/Edge/i.test(ua);
 
-  // iOS Safari : popup (le redirect est bloqué par ITP d'Apple)
-  // Android : redirect (popup bloquée par les navigateurs mobiles)
-  // Desktop : popup
-  if(isAndroid){
-    document.getElementById('auth-error').textContent='';
+  if(isAndroid||isIOS||!isChrome||isBrave){
     fb.signInWithRedirect(fb.auth,provider).catch(function(e){
-      // Si redirect échoue sur Android, essayer popup
-      fb.signInWithPopup(fb.auth,provider).catch(function(e2){
-        var el=document.getElementById('auth-error');
-        if(el) el.textContent='Erreur : '+e2.message;
-      });
+      var el=document.getElementById('auth-error');
+      if(el) el.textContent='Erreur : '+e.message;
     });
   } else {
-    // iOS Safari + Desktop : popup
     fb.signInWithPopup(fb.auth,provider).catch(function(e){
-      var el=document.getElementById('auth-error');
-      if(el){
-        if(e.code==='auth/popup-blocked'){
-          el.textContent='Popup bloquée — autorise les popups dans Safari (Réglages → Safari → Bloquer les fenêtres pop-up → désactiver)';
-        } else if(e.code==='auth/cancelled-popup-request'||e.code==='auth/popup-closed-by-user'){
-          el.textContent='Connexion annulée. Réessaie.';
-        } else {
-          el.textContent='Erreur : '+e.message;
-        }
+      if(e.code==='auth/popup-blocked'||e.code==='auth/cancelled-popup-request'){
+        fb.signInWithRedirect(fb.auth,provider);
+      } else {
+        var el=document.getElementById('auth-error');
+        if(el) el.textContent='Erreur : '+e.message;
       }
     });
   }
