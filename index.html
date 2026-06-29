@@ -724,6 +724,9 @@ function installPWA(){
   <div class="page-head">
     <h2>👤 Fiches JSP</h2>
     <button class="btn btn-primary" onclick="openJSPModal()">＋ Ajouter un JSP</button>
+    <label class="btn btn-ghost" style="cursor:pointer" title="Importer depuis CSV">📥 Import CSV
+      <input type="file" accept=".csv,.txt" style="display:none" onchange="importJSPFromCSVDirect(event)">
+    </label>
     <input class="search-input" id="jsp-search" placeholder="🔍 Nom, prénom, n°…" oninput="renderJSP()">
     <select class="filter-sel" id="jsp-filter-section" onchange="renderJSP()">
       <option value="">Toutes sections</option>
@@ -1984,6 +1987,8 @@ function downloadCSVTemplate(){
 }
 
 function importJSPFromCSV(event){
+  // Afficher le résultat dans la page JSP si pas dans les settings
+  var inSettings = !!document.getElementById('csv-import-result').offsetParent;
   var file = event.target.files[0];
   if(!file) return;
   var reader = new FileReader();
@@ -2041,6 +2046,29 @@ function parseCSVJSP(text){
     });
   }
   return {jsps:jsps};
+}
+
+function importJSPFromCSVDirect(event){
+  var file = event.target.files[0];
+  if(!file){ return; }
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var result = parseCSVJSP(e.target.result);
+    if(result.error){ showToast('❌ '+result.error); return; }
+    var added=0, skipped=0;
+    result.jsps.forEach(function(j){
+      var exists = JSPs.find(function(e){
+        return e.nom.toLowerCase()===j.nom.toLowerCase() && e.prenom.toLowerCase()===j.prenom.toLowerCase();
+      });
+      if(!exists){ JSPs.push(j); added++; }
+      else skipped++;
+    });
+    save();
+    renderJSP();
+    showToast('✅ '+added+' JSP importés'+(skipped?' ('+skipped+' doublons ignorés)':''));
+  };
+  reader.readAsText(file, 'UTF-8');
+  event.target.value = '';
 }
 
 function confirmImportCSV(){
