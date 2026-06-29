@@ -2,7 +2,7 @@
   "name": "JSP Pacy-sur-Eure",
   "short_name": "JSP Manager",
   "description": "Gestion de la section JSP Pacy-sur-Eure — SDIS 27",
-  "start_url": "/jsp-manager/",
+  "start_url": "https://nimaj27.github.io/jsp-manager/",
   "display": "standalone",
   "background_color": "#0a0f1e",
   "theme_color": "#003087",
@@ -61,5 +61,5 @@
       "purpose": "any maskable"
     }
   ],
-  "scope": "/jsp-manager/"
+  "scope": "https://nimaj27.github.io/jsp-manager/"
 }
