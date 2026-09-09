@@ -1803,10 +1803,22 @@ async function initAppFirebase(){
   const {db, doc, getDoc, setDoc} = window._fb;
 
   currentUserEmail = window._fbUser.email;
-  const userKey = currentUserEmail.replace('@','-AT-').replace(/\./g,'-');
+  // Depuis 2024 : l'email brut sert de clé Firestore (autorisé par Firestore,
+  // et indispensable pour que les règles de sécurité puissent vérifier le
+  // rôle de l'appelant via un simple get() sur users/{request.auth.token.email}).
+  const userKey = currentUserEmail;
+  const legacyUserKey = currentUserEmail.replace('@','-AT-').replace(/\./g,'-');
 
   try {
-    const userDoc = await getDoc(doc(db, 'users', userKey));
+    let userDoc = await getDoc(doc(db, 'users', userKey));
+    if(!userDoc.exists() && legacyUserKey !== userKey){
+      // Migration transparente depuis l'ancien format de clé (email transformé)
+      const legacyDoc = await getDoc(doc(db, 'users', legacyUserKey));
+      if(legacyDoc.exists()){
+        await setDoc(doc(db, 'users', userKey), legacyDoc.data());
+        userDoc = await getDoc(doc(db, 'users', userKey));
+      }
+    }
     if(userDoc.exists()){
       const data = userDoc.data();
       // Vérifier si le compte est en attente de validation
@@ -6772,7 +6784,7 @@ async function initNotifications(){
 async function saveUserToken(token){
   if(!window._fb || !window._fbUser) return;
   const {db, doc, setDoc, getDoc} = window._fb;
-  const userKey = window._fbUser.email.replace('@','-AT-').replace(/\./g,'-');
+  const userKey = window._fbUser.email;
   try {
     const snap = await getDoc(doc(db, 'users', userKey));
     const data = snap.exists() ? snap.data() : {};

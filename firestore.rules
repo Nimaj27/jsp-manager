@@ -1,0 +1,123 @@
+// ════════════════════════════════════════════════════════════
+//  RÈGLES DE SÉCURITÉ FIRESTORE — JSP Manager (base-jsp-pacy)
+// ════════════════════════════════════════════════════════════
+// Ce dépôt n'héberge que le frontend statique (GitHub Pages / Netlify) :
+// Firestore ne lit jamais ce fichier automatiquement. Pour l'appliquer :
+//   1. Firebase Console → Firestore Database → Règles → coller ce contenu → Publier
+//   2. OU, avec Firebase CLI installé côté projet Firebase :
+//      firebase deploy --only firestore:rules
+//
+// Modèle de données réel (déduit de index.html) :
+//   sections/{sectionId}   → 1 doc géant par section (jsps, seances, sports,
+//                             concours, notesman, seqPlanif, ..., updatedBy)
+//   users/{email}          → email brut de l'utilisateur en clé de doc
+//                             { email, nom, role: pending|chef|formateur|aide,
+//                               createdAt, fcmTokens[] }
+//   historique/{id}        → journal d'actions, append-only
+//
+// IMPORTANT — limite connue : `sections/{id}` est un document unique
+// contenant TOUTES les données. Le rôle "aide" (censé ne modifier que les
+// présences côté UI) ne peut donc pas être restreint à un sous-ensemble de
+// champs par ces règles : autoriser son écriture reviendrait à lui donner
+// un accès total au document. Ces règles le mettent donc en LECTURE SEULE
+// niveau serveur (le bouton "présence" pour ce rôle ne se synchronisera
+// plus tant que les présences ne sont pas isolées dans leur propre
+// collection/sous-collection — voir suggestion de refonte en fin de fichier).
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email != null;
+    }
+
+    function myEmail() {
+      return request.auth.token.email;
+    }
+
+    function myUserDoc() {
+      return get(/databases/$(database)/documents/users/$(myEmail()));
+    }
+
+    function myRole() {
+      return exists(/databases/$(database)/documents/users/$(myEmail()))
+        ? myUserDoc().data.role
+        : null;
+    }
+
+    function isApprovedMember() {
+      return isSignedIn() && myRole() in ['chef', 'formateur', 'aide'];
+    }
+
+    function isChef() {
+      return isSignedIn() && myRole() == 'chef';
+    }
+
+    function canEditSection() {
+      // 'aide' reste volontairement en dehors de cette liste (voir note en tête de fichier)
+      return isSignedIn() && myRole() in ['chef', 'formateur'];
+    }
+
+    // ── sections/{sectionId} : données de la section (JSP, séances, ...) ──
+    match /sections/{sectionId} {
+      allow read: if isApprovedMember();
+      allow write: if canEditSection();
+    }
+
+    // ── users/{email} : comptes + rôles ─────────────────────────────────
+    match /users/{userId} {
+      // Chacun lit son propre profil ; le chef peut lister/lire tous les comptes
+      // (nécessaire pour l'écran "Gestion des accès").
+      allow get:  if isSignedIn() && (myEmail() == userId || isChef());
+      allow list: if isChef();
+
+      // Un utilisateur ne peut créer que SON PROPRE document, et seulement :
+      //  - avec le rôle 'pending' (compte en attente de validation), ou
+      //  - avec le rôle 'chef' si aucune section n'existe encore
+      //    (bootstrap : le tout premier utilisateur devient chef).
+      allow create: if isSignedIn() && myEmail() == userId && (
+        request.resource.data.role == 'pending' ||
+        (
+          request.resource.data.role == 'chef' &&
+          !exists(/databases/$(database)/documents/sections/pacy)
+        )
+      );
+
+      // Le chef peut changer le rôle de n'importe qui.
+      // Un utilisateur peut mettre à jour SON PROPRE doc uniquement pour
+      // enregistrer son token de notification (fcmTokens), jamais son rôle.
+      allow update: if isSignedIn() && (
+        isChef() ||
+        (
+          myEmail() == userId &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fcmTokens'])
+        )
+      );
+
+      allow delete: if isChef();
+    }
+
+    // ── historique/{id} : journal d'actions, append-only ────────────────
+    match /historique/{entryId} {
+      allow read:   if isApprovedMember();
+      allow create: if isApprovedMember() && request.resource.data.email == myEmail();
+      allow update, delete: if false;
+    }
+
+    // Tout le reste est refusé par défaut.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+// ── Suggestion de refonte (hors périmètre de ce correctif) ──────────────
+// Pour redonner au rôle "aide" un droit d'écriture réel et sûr, déplacer les
+// présences de séance dans une sous-collection dédiée, par ex.
+// sections/{sectionId}/presences/{seanceId}, avec une règle :
+//   allow write: if myRole() in ['chef','formateur','aide']
+//                && request.resource.data.diff(resource.data)
+//                     .affectedKeys().hasOnly(['presents','absents']);
+// Cela permettrait de restreindre précisément ce que "aide" peut modifier,
+// ce qu'un document unique ne permet pas.
