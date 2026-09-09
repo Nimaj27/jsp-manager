@@ -23,6 +23,7 @@ let JSPs     = [];
 let seances  = [];
 let sports   = [];
 let concours = [];
+let _presenceDocsCache = []; // derniers docs de sections/{id}/presences reçus
 
 // ── Cache localStorage (fallback hors-ligne) ────────────────
 function saveCache(){
@@ -67,6 +68,41 @@ async function save(){
   }
 }
 
+// ── Présences de séance (sous-collection séparée) ───────────
+// Isolées de sections/{id} pour que les règles Firestore puissent
+// autoriser le rôle 'aide' à écrire uniquement les présences, sans lui
+// donner accès au reste des données (JSP, séances, notes...).
+function applyPresenceDocs(docs){
+  (docs||[]).forEach(function(d){
+    var se = seances.find(function(s){ return String(s.id)===d.id; });
+    if(se) se.presents = d.data().presents || [];
+  });
+}
+async function saveSeancePresence(seanceId, presents){
+  var se = seances.find(function(s){ return s.id===seanceId; });
+  if(se) se.presents = presents;
+  saveCache();
+  showSaveInd();
+  if(!window._fb || !window._fbUser) return;
+  const {db, doc, setDoc} = window._fb;
+  try {
+    await setDoc(doc(db, 'sections', SECTION_ID, 'presences', String(seanceId)), {
+      presents: presents,
+      updatedAt: new Date().toISOString(),
+      updatedBy: window._fbUser.email,
+    });
+  } catch(e){
+    console.warn('saveSeancePresence error:', e.message);
+    showToast('⚠️ Présences sauvegardées localement (sync échouée)');
+  }
+}
+async function deleteSeancePresence(seanceId){
+  if(!window._fb || !window._fbUser || !window._fb.deleteDoc) return;
+  const {db, doc, deleteDoc} = window._fb;
+  try { await deleteDoc(doc(db, 'sections', SECTION_ID, 'presences', String(seanceId))); }
+  catch(e){ console.warn('deleteSeancePresence error:', e.message); }
+}
+
 // ── Historique des modifications ────────────────────────────
 async function logHistorique(action, details){
   if(!window._fb || !window._fbUser) return;
@@ -86,7 +122,7 @@ async function logHistorique(action, details){
 // ── Écoute temps réel Firebase ──────────────────────────────
 function subscribeFirebase(){
   if(!window._fb) return;
-  const {db, doc, onSnapshot} = window._fb;
+  const {db, doc, collection, onSnapshot} = window._fb;
   _fbUnsubscribers.forEach(function(u){try{u();}catch(e){}});
   _fbUnsubscribers = [];
   const unsub = onSnapshot(doc(db, 'sections', SECTION_ID), function(snap){
@@ -102,6 +138,9 @@ function subscribeFirebase(){
     if(d.seqModeles)  seqModeles = d.seqModeles;
     if(d.referentiel) saveRef(d.referentiel);
     if(d.evaluations) saveEvals(d.evaluations);
+    // Les présences vivent dans leur propre sous-collection : les réappliquer
+    // par-dessus la copie de seances qu'on vient de recevoir.
+    applyPresenceDocs(_presenceDocsCache);
     saveCache();
     renderAll();
     setTimeout(function(){ var el=document.getElementById('accueil-content'); if(el) renderAccueil(); }, 300);
@@ -110,6 +149,17 @@ function subscribeFirebase(){
     console.warn('Firebase sync error:', err.message);
   });
   _fbUnsubscribers.push(unsub);
+
+  const unsubPres = onSnapshot(collection(db, 'sections', SECTION_ID, 'presences'), function(snap){
+    _presenceDocsCache = snap.docs;
+    applyPresenceDocs(snap.docs);
+    saveCache();
+    renderAll();
+    setTimeout(function(){ var el=document.getElementById('accueil-content'); if(el) renderAccueil(); }, 300);
+  }, function(err){
+    console.warn('Presence sync error:', err.message);
+  });
+  _fbUnsubscribers.push(unsubPres);
 }
 
 // ── Initialisation Firebase ─────────────────────────────────

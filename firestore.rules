@@ -8,21 +8,20 @@
 //      firebase deploy --only firestore:rules
 //
 // Modèle de données réel (déduit de index.html) :
-//   sections/{sectionId}   → 1 doc géant par section (jsps, seances, sports,
-//                             concours, notesman, seqPlanif, ..., updatedBy)
-//   users/{email}          → email brut de l'utilisateur en clé de doc
-//                             { email, nom, role: pending|chef|formateur|aide,
-//                               createdAt, fcmTokens[] }
-//   historique/{id}        → journal d'actions, append-only
+//   sections/{sectionId}             → 1 doc géant par section (jsps, seances,
+//                                       sports, concours, notesman, seqPlanif,
+//                                       ..., updatedBy)
+//   sections/{sectionId}/presences/{seanceId} → présences d'une séance, isolées
+//                                       du doc géant : { presents: [id,...],
+//                                       updatedAt, updatedBy }
+//   users/{email}                    → email brut de l'utilisateur en clé de doc
+//                                       { email, nom, role: pending|chef|formateur|aide,
+//                                         createdAt, fcmTokens[] }
+//   historique/{id}                  → journal d'actions, append-only
 //
-// IMPORTANT — limite connue : `sections/{id}` est un document unique
-// contenant TOUTES les données. Le rôle "aide" (censé ne modifier que les
-// présences côté UI) ne peut donc pas être restreint à un sous-ensemble de
-// champs par ces règles : autoriser son écriture reviendrait à lui donner
-// un accès total au document. Ces règles le mettent donc en LECTURE SEULE
-// niveau serveur (le bouton "présence" pour ce rôle ne se synchronisera
-// plus tant que les présences ne sont pas isolées dans leur propre
-// collection/sous-collection — voir suggestion de refonte en fin de fichier).
+// Le rôle "aide" ne peut écrire QUE dans sections/{id}/presences/{seanceId}
+// (et seulement les champs presents/updatedAt/updatedBy) : il reste en
+// lecture seule sur le reste du document de section (JSP, séances, notes...).
 
 rules_version = '2';
 service cloud.firestore {
@@ -63,6 +62,17 @@ service cloud.firestore {
     match /sections/{sectionId} {
       allow read: if isApprovedMember();
       allow write: if canEditSection();
+
+      // ── presences/{seanceId} : présences d'une séance, isolées du doc
+      // géant pour que "aide" puisse y écrire sans toucher au reste.
+      match /presences/{seanceId} {
+        allow read: if isApprovedMember();
+        allow create: if isApprovedMember()
+          && request.resource.data.keys().hasOnly(['presents', 'updatedAt', 'updatedBy']);
+        allow update: if isApprovedMember()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['presents', 'updatedAt', 'updatedBy']);
+        allow delete: if canEditSection();
+      }
     }
 
     // ── users/{email} : comptes + rôles ─────────────────────────────────
@@ -111,13 +121,3 @@ service cloud.firestore {
     }
   }
 }
-
-// ── Suggestion de refonte (hors périmètre de ce correctif) ──────────────
-// Pour redonner au rôle "aide" un droit d'écriture réel et sûr, déplacer les
-// présences de séance dans une sous-collection dédiée, par ex.
-// sections/{sectionId}/presences/{seanceId}, avec une règle :
-//   allow write: if myRole() in ['chef','formateur','aide']
-//                && request.resource.data.diff(resource.data)
-//                     .affectedKeys().hasOnly(['presents','absents']);
-// Cela permettrait de restreindre précisément ce que "aide" peut modifier,
-// ce qu'un document unique ne permet pas.

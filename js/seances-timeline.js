@@ -111,6 +111,7 @@ function appelTousAbsents(){
 }
 
 function terminerAppel(){
+  if(!checkAcces('presence')) return;
   var se = seances.find(function(s){return s.id===_appelSeanceId;});
   if(!se){ closeAppel(); return; }
 
@@ -119,8 +120,7 @@ function terminerAppel(){
     .filter(function(id){return _appelPresents[+id]===true;})
     .map(function(id){return +id;});
 
-  se.presents = presents;
-  save();
+  saveSeancePresence(se.id, presents);
 
   var nbP = presents.length;
   var total = Object.keys(_appelPresents).length;
@@ -233,12 +233,14 @@ function saveSeance(){ if(!checkAcces('formateur')) return;
     date, type:document.getElementById('s-type').value,
     theme:document.getElementById('s-theme').value.trim(),
     saison:document.getElementById('s-saison').value.trim()||getSaison(),
-    presents, notes:document.getElementById('s-notes').value.trim()
+    notes:document.getElementById('s-notes').value.trim()
   };
-  if(id){ const i=seances.findIndex(s=>s.id===+id); seances[i]={...seances[i],...data}; }
-  else { data.id=Date.now(); seances.push(data); }
+  const seanceId = id ? +id : Date.now();
+  if(id){ const i=seances.findIndex(s=>s.id===seanceId); seances[i]={...seances[i],...data}; }
+  else { data.id=seanceId; seances.push(data); }
   const isNewS = !document.getElementById('s-id').value;
   save();
+  saveSeancePresence(seanceId, presents);
   logHistorique(isNewS ? 'Ajout séance' : 'Modification séance', document.getElementById('s-date').value+' — '+(document.getElementById('s-theme').value||document.getElementById('s-type').value));
   closeModal('modal-seance'); renderSeances();
 }
@@ -246,7 +248,9 @@ function deleteSeance(){
   const id=+document.getElementById('s-id').value;
   if(!confirm('Supprimer cette séance ?')) return;
   seances=seances.filter(s=>s.id!==id);
-  save(); closeModal('modal-seance'); renderSeances();
+  save();
+  deleteSeancePresence(id);
+  closeModal('modal-seance'); renderSeances();
 }
 function msgParents(){ const id=+document.getElementById('s-id').value; if(id) openConvocModal(id); }
 function msgParentsFor(id){ openConvocModal(id, 'cr'); }

@@ -1,5 +1,5 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, getDocs, query, orderBy, limit }
+    import { getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, getDocs, query, orderBy, limit }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getMessaging, getToken, onMessage }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
@@ -27,7 +27,7 @@
       messaging = getMessaging(app);
     } catch(e) { console.warn('FCM non disponible:', e.message); }
 
-    window._fb = { db, auth, doc, getDoc, setDoc, onSnapshot,
+    window._fb = { db, auth, doc, getDoc, setDoc, deleteDoc, onSnapshot,
                    collection, getDocs, query, orderBy, limit,
                    GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut,
                    messaging, getToken, onMessage };
