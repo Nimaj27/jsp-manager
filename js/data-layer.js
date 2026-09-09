@@ -1,0 +1,321 @@
+// ════════════════════════════════════════════════════════════
+//  JSP MANAGER — Couche données Firebase + cache localStorage
+// ════════════════════════════════════════════════════════════
+const SECTION_ID = 'pacy'; // ID unique de la section dans Firestore
+const ROLES_ACCES = {
+  chef:    {label:'Chef de section',  color:'#e8a020'},
+  formateur: {label:'Formateur',      color:'#16a34a'},
+  aide:    {label:'Aide-formateur',   color:'#1a4fa0'},
+};
+// Emails autorisés et leurs rôles — à configurer
+const USERS_AUTORISES = {};  // rempli depuis Firestore au démarrage
+
+let currentUserRole = null;
+let currentUserEmail = null;
+let _fbUnsubscribers = [];
+
+// Section unique — pas de multi-sections côté UI
+let sections = [{id:1, nom:'JSP Pacy-sur-Eure'}];
+let currentSectionId = 1;
+function k(key){ return 'cache_'+SECTION_ID+'_'+key; }
+
+let JSPs     = [];
+let seances  = [];
+let sports   = [];
+let concours = [];
+
+// ── Cache localStorage (fallback hors-ligne) ────────────────
+function saveCache(){
+  localStorage.setItem(k('jsps'),     JSON.stringify(JSPs));
+  localStorage.setItem(k('seances'),  JSON.stringify(seances));
+  localStorage.setItem(k('sports'),   JSON.stringify(sports));
+  localStorage.setItem(k('concours'), JSON.stringify(concours));
+  localStorage.setItem(k('notesman'), JSON.stringify(notesMan));
+}
+function loadFromCache(){
+  JSPs     = JSON.parse(localStorage.getItem(k('jsps'))     || '[]');
+  seances  = JSON.parse(localStorage.getItem(k('seances'))  || '[]');
+  sports   = JSON.parse(localStorage.getItem(k('sports'))   || '[]');
+  concours = JSON.parse(localStorage.getItem(k('concours')) || '[]');
+  notesMan = JSON.parse(localStorage.getItem(k('notesman')) || '[]');
+}
+function loadData(){ loadFromCache(); }
+
+// ── Sauvegarde Firebase ─────────────────────────────────────
+async function save(){
+  showSaveInd();
+  saveCache();
+  if(!window._fb || !window._fbUser) return;
+  const {db, doc, setDoc} = window._fb;
+  try {
+    await setDoc(doc(db, 'sections', SECTION_ID), {
+      jsps:      JSPs,
+      seances:   seances,
+      sports:    sports,
+      concours:  concours,
+      notesman:  notesMan,
+      seqPlanif:  (typeof seqPlanif  !== 'undefined' ? seqPlanif  : []),
+      seqModeles: (typeof seqModeles !== 'undefined' ? seqModeles : []),
+      referentiel: (typeof loadRef  === 'function' ? loadRef()  : {}),
+      evaluations: (typeof loadEvals=== 'function' ? loadEvals(): {}),
+      updatedAt: new Date().toISOString(),
+      updatedBy: window._fbUser.email,
+    });
+  } catch(e){
+    console.warn('Firebase save error:', e.message);
+    showToast('⚠️ Sauvegardé localement (sync échouée)');
+  }
+}
+
+// ── Historique des modifications ────────────────────────────
+async function logHistorique(action, details){
+  if(!window._fb || !window._fbUser) return;
+  const {db, collection, doc, setDoc} = window._fb;
+  try {
+    const id = Date.now().toString();
+    await setDoc(doc(collection(db, 'historique'), id), {
+      timestamp: new Date().toISOString(),
+      user: window._fbUser.displayName || window._fbUser.email,
+      email: window._fbUser.email,
+      action: action,
+      details: details || '',
+    });
+  } catch(e){ console.warn('Log historique error:', e.message); }
+}
+
+// ── Écoute temps réel Firebase ──────────────────────────────
+function subscribeFirebase(){
+  if(!window._fb) return;
+  const {db, doc, onSnapshot} = window._fb;
+  _fbUnsubscribers.forEach(function(u){try{u();}catch(e){}});
+  _fbUnsubscribers = [];
+  const unsub = onSnapshot(doc(db, 'sections', SECTION_ID), function(snap){
+    if(!snap.exists()) return;
+    const d = snap.data();
+    // Ne pas écraser si c'est notre propre sauvegarde (même utilisateur < 2s)
+    JSPs       = d.jsps      || [];
+    seances    = d.seances   || [];
+    sports     = d.sports    || [];
+    concours   = d.concours  || [];
+    notesMan   = d.notesman  || [];
+    if(d.seqPlanif)   seqPlanif  = d.seqPlanif;
+    if(d.seqModeles)  seqModeles = d.seqModeles;
+    if(d.referentiel) saveRef(d.referentiel);
+    if(d.evaluations) saveEvals(d.evaluations);
+    saveCache();
+    renderAll();
+    setTimeout(function(){ var el=document.getElementById('accueil-content'); if(el) renderAccueil(); }, 300);
+    showToast('🔄 Synchronisé');
+  }, function(err){
+    console.warn('Firebase sync error:', err.message);
+  });
+  _fbUnsubscribers.push(unsub);
+}
+
+// ── Initialisation Firebase ─────────────────────────────────
+async function initAppFirebase(){
+  if(!window._fb || !window._fbUser) return;
+  const {db, doc, getDoc, setDoc} = window._fb;
+
+  currentUserEmail = window._fbUser.email;
+  // Depuis 2024 : l'email brut sert de clé Firestore (autorisé par Firestore,
+  // et indispensable pour que les règles de sécurité puissent vérifier le
+  // rôle de l'appelant via un simple get() sur users/{request.auth.token.email}).
+  const userKey = currentUserEmail;
+  const legacyUserKey = currentUserEmail.replace('@','-AT-').replace(/\./g,'-');
+
+  try {
+    let userDoc = await getDoc(doc(db, 'users', userKey));
+    if(!userDoc.exists() && legacyUserKey !== userKey){
+      // Migration transparente depuis l'ancien format de clé (email transformé)
+      const legacyDoc = await getDoc(doc(db, 'users', legacyUserKey));
+      if(legacyDoc.exists()){
+        await setDoc(doc(db, 'users', userKey), legacyDoc.data());
+        userDoc = await getDoc(doc(db, 'users', userKey));
+      }
+    }
+    if(userDoc.exists()){
+      const data = userDoc.data();
+      // Vérifier si le compte est en attente de validation
+      if(data.role === 'pending'){
+        showWaitingScreen();
+        return;
+      }
+      currentUserRole = data.role || 'aide';
+    } else {
+      // Vérifier si la section existe déjà (premier utilisateur = chef)
+      const sectDoc = await getDoc(doc(db, 'sections', SECTION_ID));
+      if(sectDoc.exists()){
+        // Section existe → nouvel utilisateur → en attente de validation
+        currentUserRole = 'pending';
+        await setDoc(doc(db, 'users', userKey), {
+          email: currentUserEmail,
+          nom: window._fbUser.displayName || currentUserEmail,
+          role: 'pending',
+          createdAt: new Date().toISOString(),
+        });
+        showWaitingScreen();
+        return;
+      } else {
+        // Première connexion = premier chef de section
+        currentUserRole = 'chef';
+        await setDoc(doc(db, 'users', userKey), {
+          email: currentUserEmail,
+          nom: window._fbUser.displayName || currentUserEmail,
+          role: 'chef',
+          createdAt: new Date().toISOString(),
+        });
+      }
+    }
+  } catch(e){
+    console.warn('initAppFirebase error:', e.message);
+    currentUserRole = 'formateur';
+  }
+
+  showApp();
+}
+
+function showWaitingScreen(){
+  document.getElementById('auth-overlay').style.display = 'none';
+  document.getElementById('waiting-overlay').style.display = 'flex';
+  var emailEl = document.getElementById('waiting-email');
+  if(emailEl) emailEl.textContent = 'Compte : ' + (window._fbUser ? window._fbUser.email : '');
+}
+
+async function showApp(){
+  document.getElementById('auth-overlay').style.display = 'none';
+  document.getElementById('waiting-overlay').style.display = 'none';
+  updateUserBadge(window._fbUser);
+  document.getElementById('app-wrapper').style.display = '';
+
+  // Charger données initiales depuis Firebase
+  loadFromCache();
+  try {
+    const snap = await getDoc(doc(db, 'sections', SECTION_ID));
+    if(snap.exists()){
+      const d = snap.data();
+      JSPs     = d.jsps     || [];
+      seances  = d.seances  || [];
+      sports   = d.sports   || [];
+      concours = d.concours || [];
+      notesMan = d.notesman || [];
+      saveCache();
+    }
+  } catch(e){ console.warn('Init load error:', e); }
+
+  // Démarrer l'écoute temps réel
+  subscribeFirebase();
+
+  loadTheme();
+  loadClubName();
+  renderSectionSelect();
+  renderJSP();
+}
+
+function updateUserBadge(user){
+  if(!user) return;
+  const avatar = document.getElementById('user-avatar');
+  const nameEl = document.getElementById('user-name');
+  const roleEl = document.getElementById('user-role-badge');
+  if(avatar && user.photoURL){ avatar.src=user.photoURL; avatar.style.display='block'; }
+  if(nameEl) nameEl.textContent = user.displayName ? user.displayName.split(' ')[0] : user.email;
+  if(roleEl && currentUserRole){
+    const r = ROLES_ACCES[currentUserRole];
+    if(r){ roleEl.textContent=r.label; roleEl.style.background=r.color; roleEl.style.color='#fff'; }
+  }
+}
+
+
+
+
+// ── Contrôle des accès ──────────────────────────────────────
+function canWrite(niveau){
+  // Si rôle pas encore chargé depuis Firebase, autoriser temporairement
+  if(currentUserRole === null) return true;
+  if(currentUserRole === 'chef') return true;
+  if(currentUserRole === 'formateur') return niveau !== 'all';
+  if(currentUserRole === 'aide') return niveau === 'presence';
+  return false;
+}
+function checkAcces(niveau){
+  if(!canWrite(niveau)){
+    showToast('⛔ Accès refusé — rôle insuffisant');
+    return false;
+  }
+  return true;
+}
+let saveTimer;
+function showSaveInd(){
+  const el = document.getElementById('save-ind');
+  el.classList.add('show');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>el.classList.remove('show'), 1400);
+}
+
+function getJSP(id){ return JSPs.find(j=>j.id===id); }
+function getSaison(){
+  const m = new Date().getMonth();
+  const y = new Date().getFullYear();
+  return m >= 7 ? `${y}-${String(y+1).slice(2)}` : `${y-1}-${String(y).slice(2)}`;
+}
+
+// ── Sections ────────────────────────────────────────────────
+function renderSectionSelect(){
+  const sel = document.getElementById('section-select');
+  sel.innerHTML = sections.map(s=>`<option value="${s.id}" ${s.id===currentSectionId?'selected':''}>${s.nom}</option>`).join('');
+}
+function switchSection(id){
+  currentSectionId = parseInt(id);
+  loadData();
+  localStorage.setItem('jsp_current_section', String(currentSectionId));
+  renderAll();
+}
+function addSection(){
+  const nom = prompt('Nom de la nouvelle section :', 'Section JSP'+(sections.length+1));
+  if(!nom) return;
+  const id = Date.now();
+  sections.push({id, nom});
+  currentSectionId = id;
+  JSPs=[]; seances=[]; sports=[]; concours=[];
+  save(); renderSectionSelect(); renderAll();
+}
+
+// ── Tabs ────────────────────────────────────────────────────
+function showTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  if(tab==='jsp')       renderJSP();
+  if(tab==='seances')   renderSeances();
+  if(tab==='sport')     renderSport();
+  if(tab==='concours')  renderConcours();
+  if(tab==='manoeuvre') renderSequenceur();
+  if(tab==='formation') renderFormation();
+  if(tab==='suivi'){    renderSuivi(); showVTab('stats'); }
+}
+
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+// ════════════════════════════════════════════════════════════
+//  ASSIDUITÉ — calcul présence par JSP
+// ════════════════════════════════════════════════════════════
+function getAssiduite(jspId, saison){
+  let s = saison ? seances.filter(se=>se.saison===saison) : seances;
+  if(!s.length) return null;
+  const present = s.filter(se=>(se.presents||[]).includes(jspId)).length;
+  return Math.round(present / s.length * 100);
+}
+
+// ════════════════════════════════════════════════════════════
+//  PAGE JSP
+// ════════════════════════════════════════════════════════════
+let jspSort = {col:'nom', dir:1};
+
+// ════════════════════════════════════════════════════════════
+//  TABLEAU DE BORD — ACCUEIL
+// ════════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════════
+//  TABLEAU DE BORD — ACCUEIL v2 (graphiques + tendances)
+// ════════════════════════════════════════════════════════════
+
