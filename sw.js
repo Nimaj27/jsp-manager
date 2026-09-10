@@ -4,7 +4,7 @@
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
 
-const CACHE_NAME = 'jsp-manager-v4';
+const CACHE_NAME = 'jsp-manager-v5';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDSSMGVAQ2ygh2KjPVwePxBnq8_oO6Bzik",
@@ -94,6 +94,25 @@ self.addEventListener('fetch', function(event){
     );
     return;
   }
+  // Code de l'appli (JS/CSS/HTML) : réseau en priorité, cache seulement en
+  // secours hors-ligne — sinon une mise à jour de code peut rester invisible
+  // indéfiniment tant que sw.js lui-même n'a pas changé (vécu en prod).
+  if(/\.(js|css|html)$/.test(new URL(event.request.url).pathname)){
+    event.respondWith(
+      fetch(event.request).then(function(response){
+        if(response.ok){
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(function(cache){ cache.put(event.request, clone); });
+        }
+        return response;
+      }).catch(function(){
+        return caches.match(event.request);
+      })
+    );
+    return;
+  }
+
+  // Autres ressources (images...) : cache en priorité, réseau en secours.
   event.respondWith(
     caches.match(event.request).then(function(cached){
       return cached || fetch(event.request).then(function(response){
