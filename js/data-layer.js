@@ -238,22 +238,10 @@ async function showApp(){
   updateUserBadge(window._fbUser);
   document.getElementById('app-wrapper').style.display = '';
 
-  // Charger données initiales depuis Firebase
+  // Charger le cache local en attendant la première réponse Firebase
   loadFromCache();
-  try {
-    const snap = await getDoc(doc(db, 'sections', SECTION_ID));
-    if(snap.exists()){
-      const d = snap.data();
-      JSPs     = d.jsps     || [];
-      seances  = d.seances  || [];
-      sports   = d.sports   || [];
-      concours = d.concours || [];
-      notesMan = d.notesman || [];
-      saveCache();
-    }
-  } catch(e){ console.warn('Init load error:', e); }
 
-  // Démarrer l'écoute temps réel
+  // Démarrer l'écoute temps réel (couvre aussi le chargement initial)
   subscribeFirebase();
 
   loadTheme();
