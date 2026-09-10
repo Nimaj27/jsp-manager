@@ -4,7 +4,7 @@
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
 
-const CACHE_NAME = 'jsp-manager-v2';
+const CACHE_NAME = 'jsp-manager-v3';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDSSMGVAQ2ygh2KjPVwePxBnq8_oO6Bzik",
@@ -59,8 +59,19 @@ self.addEventListener('notificationclick', function(event) {
 self.addEventListener('install', function(event){
   event.waitUntil(
     caches.open(CACHE_NAME).then(function(cache){
-      return cache.addAll(['/jsp-manager/', '/jsp-manager/index.html', '/jsp-manager/manifest.json'])
-        .catch(function(e){ console.warn('SW precache:', e); });
+      return cache.addAll([
+        '/jsp-manager/', '/jsp-manager/index.html', '/jsp-manager/manifest.json',
+        '/jsp-manager/jsp_public.html',
+        '/jsp-manager/css/style.css',
+        '/jsp-manager/js/firebase-init.js', '/jsp-manager/js/header-actions.js',
+        '/jsp-manager/js/pwa-hints.js', '/jsp-manager/js/pwa-install.js',
+        '/jsp-manager/js/data-layer.js', '/jsp-manager/js/jsp-page.js',
+        '/jsp-manager/js/seances-timeline.js', '/jsp-manager/js/notes-sport.js',
+        '/jsp-manager/js/sport-challenge-suivi.js', '/jsp-manager/js/concours.js',
+        '/jsp-manager/js/formation.js', '/jsp-manager/js/sequenceur.js',
+        '/jsp-manager/js/suivi-parametres.js',
+        '/jsp-manager/img/logo-small.jpg', '/jsp-manager/img/logo-large.jpg',
+      ]).catch(function(e){ console.warn('SW precache:', e); });
     }).then(function(){ return self.skipWaiting(); })
   );
 });
