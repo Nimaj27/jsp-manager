@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "base-jsp-pacy"
+  },
+  "targets": {
+    "base-jsp-pacy": {
+      "hosting": {
+        "jsp-manager": [
+          "jsp-manager"
+        ]
+      }
+    }
+  }
+}

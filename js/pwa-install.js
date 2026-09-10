@@ -1,7 +1,7 @@
 // ── Enregistrement Service Worker PWA ──────────────────────
 if('serviceWorker' in navigator){
   window.addEventListener('load', function(){
-    navigator.serviceWorker.register('/jsp-manager/sw.js')
+    navigator.serviceWorker.register('sw.js')
       .then(function(reg){
         console.log('SW enregistré:', reg.scope);
         // Détecter mise à jour disponible

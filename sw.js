@@ -4,7 +4,7 @@
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
 
-const CACHE_NAME = 'jsp-manager-v3';
+const CACHE_NAME = 'jsp-manager-v4';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDSSMGVAQ2ygh2KjPVwePxBnq8_oO6Bzik",
@@ -22,8 +22,8 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage(function(payload) {
   const title = (payload.notification && payload.notification.title) || 'JSP Manager';
   const body  = (payload.notification && payload.notification.body)  || 'Nouvelles données disponibles';
-  const icon  = '/icon-192x192.png';
-  const badge = '/icon-72x72.png';
+  const icon  = 'icon-192x192.png';
+  const badge = 'icon-72x72.png';
 
   return self.registration.showNotification(title, {
     body:  body,
@@ -46,11 +46,11 @@ self.addEventListener('notificationclick', function(event) {
   event.waitUntil(
     clients.matchAll({type:'window', includeUncontrolled:true}).then(function(clientList){
       for(var i=0;i<clientList.length;i++){
-        if(clientList[i].url.includes('nimaj27.github.io/jsp-manager') && 'focus' in clientList[i]){
+        if(clientList[i].url.startsWith(self.registration.scope) && 'focus' in clientList[i]){
           return clientList[i].focus();
         }
       }
-      return clients.openWindow('https://nimaj27.github.io/jsp-manager/');
+      return clients.openWindow(self.registration.scope);
     })
   );
 });
@@ -60,17 +60,17 @@ self.addEventListener('install', function(event){
   event.waitUntil(
     caches.open(CACHE_NAME).then(function(cache){
       return cache.addAll([
-        '/jsp-manager/', '/jsp-manager/index.html', '/jsp-manager/manifest.json',
-        '/jsp-manager/jsp_public.html',
-        '/jsp-manager/css/style.css',
-        '/jsp-manager/js/firebase-init.js', '/jsp-manager/js/header-actions.js',
-        '/jsp-manager/js/pwa-hints.js', '/jsp-manager/js/pwa-install.js',
-        '/jsp-manager/js/data-layer.js', '/jsp-manager/js/jsp-page.js',
-        '/jsp-manager/js/seances-timeline.js', '/jsp-manager/js/notes-sport.js',
-        '/jsp-manager/js/sport-challenge-suivi.js', '/jsp-manager/js/concours.js',
-        '/jsp-manager/js/formation.js', '/jsp-manager/js/sequenceur.js',
-        '/jsp-manager/js/suivi-parametres.js',
-        '/jsp-manager/img/logo-small.jpg', '/jsp-manager/img/logo-large.jpg',
+        './', 'index.html', 'manifest.json',
+        'jsp_public.html',
+        'css/style.css',
+        'js/firebase-init.js', 'js/header-actions.js',
+        'js/pwa-hints.js', 'js/pwa-install.js',
+        'js/data-layer.js', 'js/jsp-page.js',
+        'js/seances-timeline.js', 'js/notes-sport.js',
+        'js/sport-challenge-suivi.js', 'js/concours.js',
+        'js/formation.js', 'js/sequenceur.js',
+        'js/suivi-parametres.js',
+        'img/logo-small.jpg', 'img/logo-large.jpg',
       ]).catch(function(e){ console.warn('SW precache:', e); });
     }).then(function(){ return self.skipWaiting(); })
   );
@@ -89,7 +89,7 @@ self.addEventListener('fetch', function(event){
   if(event.request.mode === 'navigate'){
     event.respondWith(
       fetch(event.request).catch(function(){
-        return caches.match('/index.html');
+        return caches.match('index.html');
       })
     );
     return;
