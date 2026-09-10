@@ -42,7 +42,7 @@ function openNotesManModal(type, refId){
       +'background:'+(hn?'rgba(0,48,135,.2)':'var(--card)')+';border:1px solid '+(hn?'var(--sdis-bleu)':'var(--border)')+';'
       +'border-radius:var(--radius-sm);cursor:pointer;font-size:12px;color:var(--txt);">'
       
-      +j.nom+' '+j.prenom+nl+'</button>';
+      +esc(j.nom)+' '+esc(j.prenom)+nl+'</button>';
   }).join('');
   document.getElementById('notesman-form').style.display='none';
   document.getElementById('notesman-jsp-list').style.display='flex';
@@ -141,11 +141,11 @@ function renderNotesManRecap(){
     var col=n.note>=14?'var(--ok)':n.note>=8?'var(--warn)':'var(--danger)';
     var vals=Object.values(n.criteres||{});
     var cm=vals.length?Math.round(vals.reduce(function(a,b){return a+b;},0)/vals.length):null;
-    return '<tr><td>'+(j?j.nom+' '+j.prenom:'?')+'</td>'
-      +'<td style="text-align:center;font-size:10px;color:var(--txt-muted)">'+(n.role||'—')+'</td>'
+    return '<tr><td>'+(j?esc(j.nom)+' '+esc(j.prenom):'?')+'</td>'
+      +'<td style="text-align:center;font-size:10px;color:var(--txt-muted)">'+esc(n.role||'—')+'</td>'
       +'<td style="text-align:center">'+(cm!==null?cm+'/20':'—')+'</td>'
       +'<td style="text-align:center;font-weight:700;color:'+col+'">'+n.note+'/20</td>'
-      +'<td style="font-size:11px;color:var(--txt-muted)">'+(n.obs||'')+'</td>'
+      +'<td style="font-size:11px;color:var(--txt-muted)">'+esc(n.obs||'')+'</td>'
       +'<td><button class="btn btn-ghost btn-icon btn-sm" onclick="openNotesManJsp('+n.jspId+')">✏️</button></td></tr>';
   }).join('');
   el.innerHTML='<div style="font-weight:700;font-size:12px;margin-bottom:6px;color:var(--txt-muted)">Notes saisies ('+notes.length+') :</div>'
@@ -343,12 +343,12 @@ function renderSport(){
     const rank = Object.entries(best).map(([jid,v])=>({j:getJSP(+jid),v})).filter(e=>e.j).sort((a,b)=>b.v-a.v);
     const max = (rank[0]&&rank[0].v)||1;
     return `<div class="stats-card">
-      <h3>${SPORT_ICON[ep]||'📋'} ${ep} <span style="font-weight:400;color:var(--txt-muted);font-size:11px">${sess.length} session(s)</span>
-        <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="openSportModal(null,'${ep}')">＋ session</button></h3>
+      <h3>${SPORT_ICON[ep]||'📋'} ${esc(ep)} <span style="font-weight:400;color:var(--txt-muted);font-size:11px">${sess.length} session(s)</span>
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="openSportModal(null,'${esc(ep)}')">＋ session</button></h3>
       <table class="tbl" style="background:transparent">
         <tbody>${rank.slice(0,12).map((e,i)=>`<tr>
           <td style="width:30px" class="${i<3?'rank-'+(i+1):''}">${i+1}</td>
-          <td>${e.j.nom} ${e.j.prenom}</td>
+          <td>${esc(e.j.nom)} ${esc(e.j.prenom)}</td>
           <td style="text-align:right;width:90px"><strong>${e.v}</strong> <span style="font-size:11px;color:var(--txt-muted)">${unite}</span></td>
           <td style="width:90px"><span class="pbar" style="width:70px"><span class="pbar-fill" style="width:${Math.round(e.v/max*100)}%;background:var(--sdis-bleu-clair)"></span></span></td>
         </tr>`).join('')}</tbody>
@@ -376,7 +376,7 @@ function openSportModal(id=null, defaultEp=null){
   const actifs = JSPs.filter(j=>j.statut==='Actif').sort((a,b)=>a.nom.localeCompare(b.nom));
   document.getElementById('sp-results').innerHTML = actifs.length ? actifs.map(j=>`
     <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border)">
-            <span style="flex:1;font-size:13px">${j.nom} ${j.prenom}</span>
+            <span style="flex:1;font-size:13px">${esc(j.nom)} ${esc(j.prenom)}</span>
       <input type="number" step="any" id="spr-${j.id}" value="${res[j.id]??''}" placeholder="—" style="width:85px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--txt);padding:5px 8px;font-size:13px;font-weight:700;outline:none">
     </div>`).join('') : '<span style="color:var(--txt-muted);font-size:13px">Aucun JSP actif.</span>';
   document.getElementById('modal-sport').classList.add('open');

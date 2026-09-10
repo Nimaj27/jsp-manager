@@ -72,7 +72,7 @@ function importJSPFromCSV(event){
     }
     // Aperçu avant import
     var preview = result.jsps.slice(0,3).map(function(j){
-      return j.nom+' '+j.prenom+' ('+j.section+')';
+      return esc(j.nom)+' '+esc(j.prenom)+' ('+esc(j.section)+')';
     }).join(', ')+(result.jsps.length>3?' ++'+(result.jsps.length-3)+' autres':'');
     if(resEl) resEl.innerHTML = '<span style="color:var(--ok)">✅ '+result.jsps.length+' JSP trouvés : '+preview+'</span>'
       +'<br><button class="btn btn-primary btn-sm" style="margin-top:6px" onclick="confirmImportCSV()">Importer</button>'
@@ -197,7 +197,7 @@ function renderAccueil(){
   if(nextSeance){
     var dNext = new Date(nextSeance.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'});
     dNext = dNext.charAt(0).toUpperCase()+dNext.slice(1);
-    html += '<div style="font-size:17px;font-weight:700;margin-bottom:3px;">'+(nextSeance.theme||nextSeance.type||'Séance JSP')+'</div>'
+    html += '<div style="font-size:17px;font-weight:700;margin-bottom:3px;">'+esc(nextSeance.theme||nextSeance.type||'Séance JSP')+'</div>'
       +'<div style="font-size:13px;color:var(--txt-muted);margin-bottom:10px;">'+dNext+'</div>'
       +'<div style="display:flex;gap:8px;flex-wrap:wrap;">'
       +'<button class="btn btn-primary btn-sm" onclick="showTab(\'seances\')">📅 Séances</button>'
@@ -260,11 +260,11 @@ function renderAccueil(){
   actifs.forEach(function(j){
     var a = getAssiduite(j.id, saison);
     if(a!==null && a<60) alertes.push({icon:'⚠️',color:'var(--danger)',
-      text:j.nom+' '+j.prenom+' — Assiduité '+a+'%'});
+      text:esc(j.nom)+' '+esc(j.prenom)+' — Assiduité '+a+'%'});
     if(j.certifMed && j.certifMed<todayStr) alertes.push({icon:'🏥',color:'var(--danger)',
-      text:j.nom+' '+j.prenom+' — Certificat médical expiré'});
+      text:esc(j.nom)+' '+esc(j.prenom)+' — Certificat médical expiré'});
     else if(j.certifMed && j.certifMed<=addDaysStr(todayStr,90)) alertes.push({icon:'🏥',color:'var(--warn)',
-      text:j.nom+' '+j.prenom+' — Certif. médical expire bientôt'});
+      text:esc(j.nom)+' '+esc(j.prenom)+' — Certif. médical expire bientôt'});
   });
 
   if(alertes.length){
@@ -293,7 +293,7 @@ function renderAccueil(){
     var medals = ['🥇','🥈','🥉'];
 
     html += '<div class="stats-card" style="padding:14px;">'
-      +'<h3 style="margin-bottom:2px;color:var(--sdis-or)">🏅 '+sp.epreuve+'</h3>'
+      +'<h3 style="margin-bottom:2px;color:var(--sdis-or)">🏅 '+esc(sp.epreuve)+'</h3>'
       +'<div style="font-size:11px;color:var(--txt-muted);margin-bottom:10px;">'
       +new Date(sp.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+'</div>'
       +'<div style="display:flex;flex-direction:column;gap:5px;">'
@@ -301,7 +301,7 @@ function renderAccueil(){
         var pct = Math.round(e.v/maxV*100);
         return '<div style="display:flex;align-items:center;gap:6px;font-size:11px;">'
           +'<span style="width:16px">'+(i<3?medals[i]:(i+1)+'')+'</span>'
-          +'<span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+e.j.nom+' '+e.j.prenom.charAt(0)+'.</span>'
+          +'<span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(e.j.nom)+' '+esc(e.j.prenom.charAt(0))+'.</span>'
           +'<div style="width:60px;background:var(--border);border-radius:3px;height:6px;flex-shrink:0;">'
           +'<div style="width:'+pct+'%;background:var(--sdis-bleu);height:6px;border-radius:3px;"></div></div>'
           +'<span style="font-weight:700;min-width:35px;text-align:right">'+e.v+(sp.unite?' '+sp.unite:'')+'</span>'
@@ -449,8 +449,8 @@ function renderJSP(){
     const assid = getAssiduite(j.id, saison);
     const color = assid===null?'var(--txt-muted)':assid>=80?'var(--ok)':assid>=50?'var(--warn)':'var(--danger)';
     return `<tr onclick="openJSPModal(${j.id})" style="cursor:pointer">
-      <td><strong>${j.nom}</strong> ${j.prenom}</td>
-      <td><span class="badge badge-blue">${j.section}</span></td>
+      <td><strong>${esc(j.nom)}</strong> ${esc(j.prenom)}</td>
+      <td><span class="badge badge-blue">${esc(j.section)}</span></td>
       <td><span class="statut st-${j.statut}">${j.statut}</span></td>
       <td>${assid===null?'<span style="color:var(--txt-muted);font-size:12px">—</span>':
         `<span style="display:inline-flex;align-items:center;gap:7px"><span style="font-size:12px;color:${color};font-weight:600;min-width:32px">${assid}%</span><span class="pbar" style="width:55px"><span class="pbar-fill" style="width:${assid}%;background:${color}"></span></span></span>`}</td>

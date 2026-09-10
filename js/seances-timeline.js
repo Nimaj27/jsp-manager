@@ -52,8 +52,8 @@ function renderAppelGrid(actifs){
     var present = _appelPresents[j.id];
     var cls = present===true?'present':present===false?'absent':'';
     return '<div class="appel-card '+cls+'" onclick="toggleAppel('+j.id+')" id="appel-card-'+j.id+'">'
-      +'<div class="appel-nom">'+j.nom+'</div>'
-      +'<div class="appel-prenom">'+j.prenom+'</div>'
+      +'<div class="appel-nom">'+esc(j.nom)+'</div>'
+      +'<div class="appel-prenom">'+esc(j.prenom)+'</div>'
       +'<div class="appel-status"></div>'
       +'</div>';
   }).join('');
@@ -167,7 +167,7 @@ function renderSeances(){
     return `<div class="lcard">
       <div class="lcard-date">${d}</div>
       <div class="lcard-icon">${SEANCE_ICON[se.type]||'📅'}</div>
-      <div class="lcard-main"><div class="lcard-title">${se.theme||se.type}</div><div class="lcard-sub">${se.type}${se.notes?' · '+se.notes:''}</div></div>
+      <div class="lcard-main"><div class="lcard-title">${esc(se.theme||se.type)}</div><div class="lcard-sub">${esc(se.type)}${se.notes?' · '+esc(se.notes):''}</div></div>
       <span style="font-size:13px;font-weight:700;color:${col}">${np}<span style="font-size:11px;color:var(--txt-muted)">/${nbActifs}</span></span>
       <span class="pbar" style="width:55px"><span class="pbar-fill" style="width:${Math.min(100,pct)}%;background:${col}"></span></span>
       <div class="lcard-actions">
@@ -202,7 +202,7 @@ function openSeanceModal(id=null){
     const on = presents.includes(j.id);
     return `<label class="pres-label" data-id="${j.id}" style="display:flex;align-items:center;gap:6px;padding:5px 9px;border-radius:6px;cursor:pointer;font-size:13px;background:${on?'rgba(0,48,135,.2)':'transparent'};border:1px solid ${on?'rgba(0,80,200,.4)':'var(--border)'}">
       <input type="checkbox" ${on?'checked':''} onchange="toggleP(this)" style="accent-color:var(--sdis-bleu)">
-            <span>${j.nom} ${j.prenom}</span>
+            <span>${esc(j.nom)} ${esc(j.prenom)}</span>
     </label>`;
   }).join('') : '<span style="color:var(--txt-muted);font-size:13px">Aucun JSP actif. Ajoutez-en dans l\'onglet JSP.</span>';
   updateSCount();
@@ -323,9 +323,9 @@ function renderCertifs(){
     var dateAff = j.certifMed ? new Date(j.certifMed).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
     var rowCls = st.code==='danger'?'certif-row-danger':st.code==='warn'?'certif-row-warn':st.code==='ok'?'certif-row-ok':'certif-row-none';
     return '<tr class="'+rowCls+'">'
-      +'<td><span class="num-badge">'+j.numero+'</span></td>'
-      +'<td><strong>'+j.nom+'</strong> '+j.prenom+'</td>'
-      +'<td><span class="badge badge-blue">'+j.section+'</span></td>'
+      +'<td><span class="num-badge">'+esc(j.numero)+'</span></td>'
+      +'<td><strong>'+esc(j.nom)+'</strong> '+esc(j.prenom)+'</td>'
+      +'<td><span class="badge badge-blue">'+esc(j.section)+'</span></td>'
       +'<td style="text-align:center">'+st.icon+'</td>'
       +'<td style="font-weight:600;color:'+st.color+'">'+dateAff+'</td>'
       +'<td style="color:'+st.color+';font-size:12px">'+st.label+'</td>'
@@ -442,7 +442,7 @@ function renderBrevets(jspId, elId){
       var dateStr = new Date(it.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
       var border = it.warn==='danger'?'var(--danger)':it.warn==='warn'?'var(--warn)':'var(--sdis-bleu)';
       return '<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--card);border:1px solid '+border+';border-radius:var(--radius-sm);font-size:12px;">'
-        +it.icon+' <strong>'+it.label+'</strong> — '+dateStr
+        +it.icon+' <strong>'+esc(it.label)+'</strong> — '+dateStr
         +(it.warnLabel?'<span style="color:'+border+';font-weight:700;font-size:11px"> ('+it.warnLabel+')</span>':'')
         +'</div>';
     }).join('')
@@ -537,9 +537,9 @@ function renderTimelineEvents(jspId){
           +'background:var(--card);border-radius:6px;border-left:3px solid '+e.color+';'
           +(absent?'opacity:.55;':'')+'font-size:12px;">'
           +'<span style="font-size:15px;flex-shrink:0">'+(icons[e.type]||'📌')+'</span>'
-          +'<span style="flex:1;font-weight:'+(absent?'400':'600')+'">'+e.label+'</span>'
+          +'<span style="flex:1;font-weight:'+(absent?'400':'600')+'">'+esc(e.label)+'</span>'
           +'<span style="color:var(--txt-muted);font-size:11px;text-align:right;min-width:50px">'+d+'</span>'
-          +'<span style="font-weight:700;color:'+e.color+';font-size:11px;min-width:55px;text-align:right">'+e.sub+'</span>'
+          +'<span style="font-weight:700;color:'+e.color+';font-size:11px;min-width:55px;text-align:right">'+esc(e.sub)+'</span>'
           +'</div>';
       }).join('')
       +'</div></div>';
@@ -591,7 +591,7 @@ function renderAlertes(filteredJSPs){
         +'background:var(--card);border:1px solid '+a.color+';border-radius:var(--radius-sm);cursor:pointer;'
         +'border-left:4px solid '+a.color+';font-size:12px;">'
         +'<span style="flex-shrink:0">'+a.icon+'</span>'
-        +'<span style="flex:1">'+a.label+'</span>'
+        +'<span style="flex:1">'+esc(a.label)+'</span>'
         +'<span style="color:var(--txt-muted);font-size:11px">→ Voir timeline</span>'
         +'</div>';
     }).join('')
@@ -614,7 +614,7 @@ function renderAlerteJsp(jspId, elId){
   el.innerHTML='<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px;">'
     +alertes.map(function(a){
       return '<div style="display:flex;gap:8px;padding:6px 10px;border-radius:var(--radius-sm);border-left:3px solid '+a.color+';background:var(--card);font-size:12px;">'
-        +a.icon+' <span style="color:'+a.color+';font-weight:600">'+a.label+'</span></div>';
+        +a.icon+' <span style="color:'+a.color+';font-weight:600">'+esc(a.label)+'</span></div>';
     }).join('')+'</div>';
 }
 

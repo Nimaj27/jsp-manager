@@ -83,7 +83,7 @@ function openCQSaisieModal() {
     var sexe = getSexeJSP(j);
     return '<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--card);border-radius:6px;">'
       
-      +'<span style="flex:1;font-size:13px">'+j.nom+' '+j.prenom+'</span>'
+      +'<span style="flex:1;font-size:13px">'+esc(j.nom)+' '+esc(j.prenom)+'</span>'
       +'<span style="font-size:11px;color:var(--txt-muted)">'+cat+' '+sexe+'</span>'
       +'<input type="number" id="cq-r-'+j.id+'" min="0" step="0.01" placeholder="—" '
       +'style="width:80px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--txt);padding:4px 8px;font-size:13px;outline:none;text-align:center">'
@@ -209,7 +209,7 @@ function renderChallenge() {
       }
       return '<tr>'
         +'<td style="text-align:center;font-size:16px">'+medaille+'</td>'
-        +'<td><strong>'+e.j.nom+' '+e.j.prenom+'</strong></td>'
+        +'<td><strong>'+esc(e.j.nom)+' '+esc(e.j.prenom)+'</strong></td>'
         +'<td><span class="badge badge-blue">'+cat+'</span></td>'
         +'<td style="text-align:center;font-size:11px;color:var(--txt-muted)">'+sexe+'</td>'
         +'<td style="text-align:right;font-weight:700;font-size:15px">'+formatTemps(e.v, unite)+'</td>'
@@ -272,7 +272,7 @@ function fillSportSelects(){
   var actifs = JSPs.filter(function(j){return j.statut==='Actif';}).sort(function(a,b){return a.nom.localeCompare(b.nom);});
   var curJ = jspSel.value;
   jspSel.innerHTML = '<option value="">— Choisir —</option>'+
-    actifs.map(function(j){return '<option value="'+j.id+'"'+(String(j.id)===curJ?' selected':'')+'> '+j.nom+' '+j.prenom+'</option>';}).join('');
+    actifs.map(function(j){return '<option value="'+j.id+'"'+(String(j.id)===curJ?' selected':'')+'> '+esc(j.nom)+' '+esc(j.prenom)+'</option>';}).join('');
 }
 
 // ── Courbes de progression ──────────────────────────────────
@@ -363,7 +363,7 @@ function renderCourbes(){
     var d = s.pts.map(function(p,i){ return (i===0?'M':'L')+xPos(p.date)+' '+yPos(p.v); }).join(' ');
     var dots = s.pts.map(function(p){
       return '<circle cx="'+xPos(p.date)+'" cy="'+yPos(p.v)+'" r="4" fill="'+s.color+'" stroke="var(--bg)" stroke-width="2">'
-        +'<title>'+s.nom+' — '+p.date+' : '+p.v+' '+unite+'</title></circle>';
+        +'<title>'+esc(s.nom)+' — '+p.date+' : '+p.v+' '+unite+'</title></circle>';
     }).join('');
     return '<path d="'+d+'" stroke="'+s.color+'" stroke-width="2.5" fill="none" stroke-linejoin="round"/>'+dots;
   }).join('');
@@ -379,7 +379,7 @@ function renderCourbes(){
     var last = s.pts[s.pts.length-1];
     return '<div style="display:flex;align-items:center;gap:5px;padding:3px 8px;background:var(--card);border-radius:20px;border:1px solid var(--border)">'
       +'<span style="width:12px;height:12px;border-radius:50%;background:'+s.color+';flex-shrink:0"></span>'
-      +'<span>'+s.nom+'</span>'
+      +'<span>'+esc(s.nom)+'</span>'
       +'<strong style="color:'+s.color+'">'+last.v+' '+unite+'</strong>'
       +'</div>';
   }).join('');
@@ -419,7 +419,7 @@ function renderPodium(){
     var bh = podiumH[ri]||80;
     var y = H-30-bh;
     var col = podiumColors[ri]||'#475569';
-    var nom = e.j.prenom+' '+e.j.nom.charAt(0)+'.';
+    var nom = esc(e.j.prenom+' '+e.j.nom.charAt(0)+'.');
     return '<rect x="'+x+'" y="'+y+'" width="'+barW+'" height="'+bh+'" rx="6" fill="'+col+'" opacity="0.85"/>'
       +'<text x="'+(x+barW/2)+'" y="'+(y-22)+'" text-anchor="middle" font-size="22">'+medals[ri]+'</text>'
       +'<text x="'+(x+barW/2)+'" y="'+(y-8)+'" text-anchor="middle" font-size="11" fill="var(--txt)" font-weight="700">'+nom+'</text>'
@@ -444,7 +444,7 @@ function renderPodium(){
       }
       return '<tr>'
         +'<td style="width:30px" class="'+(i<3?'rank-'+(i+1)+'':'')+'">'+(i+1)+'</td>'
-        +'<td>'+e.j.nom+' '+e.j.prenom+' <span style="color:var(--txt-muted);font-size:11px">()</span></td>'
+        +'<td>'+esc(e.j.nom)+' '+esc(e.j.prenom)+' <span style="color:var(--txt-muted);font-size:11px">()</span></td>'
         +'<td style="text-align:right"><strong>'+e.v+'</strong> <span style="font-size:11px;color:var(--txt-muted)">'+unite+'</span></td>'
         +'<td style="width:80px;text-align:right">'+trend+'</td>'
         +'</tr>';
@@ -717,7 +717,7 @@ function renderCal(){
       ? '<div class="cal-num" style="display:flex;"><div style="background:var(--sdis-or);color:var(--sdis-bleu);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">'+c.day+'</div></div>'
       : '<div class="cal-num">'+c.day+'</div>';
     var evtsHtml = dayEvts.slice(0,3).map(function(e){
-      return '<div class="cal-evt" style="background:'+e.color+'">'+e.label+'</div>';
+      return '<div class="cal-evt" style="background:'+e.color+'">'+esc(e.label)+'</div>';
     }).join('');
     if(dayEvts.length>3) evtsHtml += '<div style="font-size:9px;color:var(--txt-muted)">+' +(dayEvts.length-3)+' autres</div>';
     cellsHtml += '<div class="'+cls+'" onclick="selectCalDay(\''+dateStr+'\')">'+numHtml+evtsHtml+'</div>';
@@ -752,10 +752,10 @@ function renderCalDetail(dateStr){
       if(e.type==='seance'){
         var np=(e.ref.presents||[]).length;
         detail = '<span style="font-size:11px;color:var(--txt-muted)">'+np+' présent'+( np>1?'s':'')+
-          (e.ref.notes?' · '+e.ref.notes:'')+'</span>';
+          (e.ref.notes?' · '+esc(e.ref.notes):'')+'</span>';
       } else if(e.type==='planif'){
         var dur=(e.ref.activites||[]).reduce(function(t,a){return t+a.duree;},0);
-        detail = '<span style="font-size:11px;color:var(--txt-muted)">'+(e.ref.cycle||'')+' · '+dur+' min'+(e.ref.lieu?' · '+e.ref.lieu:'')+'</span>';
+        detail = '<span style="font-size:11px;color:var(--txt-muted)">'+esc(e.ref.cycle||'')+' · '+dur+' min'+(e.ref.lieu?' · '+esc(e.ref.lieu):'')+'</span>';
       } else if(e.type==='concours'){
         var inc=e.ref.grilleInc?calcGrilleTotal(e.ref.grilleInc,GRILLE_INC):null;
         var grSec=e.ref.secTheme===2?GRILLE_SEC2:GRILLE_SEC1;
@@ -768,7 +768,7 @@ function renderCalDetail(dateStr){
       }
       return '<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px;background:var(--card);border-radius:8px;border-left:3px solid '+e.color+'">'
         +'<span style="font-size:18px;flex-shrink:0">'+icon+'</span>'
-        +'<div><div style="font-weight:600;font-size:13px">'+e.label+'</div>'+detail+'</div>'
+        +'<div><div style="font-weight:600;font-size:13px">'+esc(e.label)+'</div>'+detail+'</div>'
         +'</div>';
     }).join('')
     +'</div>';

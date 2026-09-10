@@ -60,13 +60,13 @@ function exportBilanAnnuel(){
     '@media print{body{font-size:10px}.page{padding:12px}}',
   ].join('');
 
-  var html = '<!DOCTYPE html><html lang="fr"><head>'+'<title>Bilan annuel '+saison+' — '+club+'</title>'
+  var html = '<!DOCTYPE html><html lang="fr"><head>'+'<title>Bilan annuel '+saison+' — '+esc(club)+'</title>'
     +'<style>'+CSS+'</style></head><body>';
 
   // ── PAGE DE GARDE ──────────────────────────────────────────
   html += '<div class="page" style="display:flex;flex-direction:column;justify-content:center;min-height:90vh;text-align:center;">'
     +'<div style="margin-bottom:30px"><div style="font-size:48px">🚒</div>'
-    +'<div style="font-size:28px;font-weight:700;color:#003087;margin:8px 0">'+club+'</div>'
+    +'<div style="font-size:28px;font-weight:700;color:#003087;margin:8px 0">'+esc(club)+'</div>'
     +'<div style="font-size:16px;color:#555">SDIS 27 — Eure</div></div>'
     +'<div style="background:#003087;color:#fff;padding:20px 30px;border-radius:10px;display:inline-block;margin:0 auto">'
     +'<div style="font-size:22px;font-weight:700">Bilan annuel de section</div>'
@@ -100,8 +100,8 @@ function exportBilanAnnuel(){
       var np = saisons_s.filter(function(s){return (s.presents||[]).includes(j.id);}).length;
       var col = a===null?'#999':a>=80?'#16a34a':a>=50?'#d97706':'#dc2626';
       var pct = a!==null?a:0;
-      return '<tr><td><strong>'+j.nom+' '+j.prenom+'</strong></td>'
-        +'<td>'+j.section+'</td><td>'+j.statut+'</td>'
+      return '<tr><td><strong>'+esc(j.nom)+' '+esc(j.prenom)+'</strong></td>'
+        +'<td>'+esc(j.section)+'</td><td>'+esc(j.statut)+'</td>'
         +'<td style="text-align:center">'+np+'/'+nbSeances+'</td>'
         +'<td style="text-align:center;color:'+col+';font-weight:700">'+(a!==null?a+'%':'—')+'</td>'
         +'<td><div class="prog-bar"><div class="prog-fill" style="width:'+pct+'%;background:'+col+'"></div></div></td>'
@@ -110,7 +110,7 @@ function exportBilanAnnuel(){
 
     html += '<div class="page">'
       +'<div class="header"><div><h1>📊 Synthèse de saison</h1>'
-      +'<div class="sub">'+club+' — Saison '+saison+'</div></div>'
+      +'<div class="sub">'+esc(club)+' — Saison '+saison+'</div></div>'
       +'<div class="badge-sdis">SDIS 27</div></div>'
       +'<div class="kpi-row">'
       +'<div class="kpi"><div class="kpi-v">'+nbActifs+'</div><div class="kpi-l">JSP actifs</div></div>'
@@ -145,8 +145,8 @@ function exportBilanAnnuel(){
       var max = rank[0]?rank[0].v:1;
       var rows = rank.map(function(e,i){
         return '<tr><td style="font-weight:700">'+(i+1)+'</td>'
-          +'<td><strong>'+e.j.nom+' '+e.j.prenom+'</strong></td>'
-          +'<td>'+e.j.section+'</td>'
+          +'<td><strong>'+esc(e.j.nom)+' '+esc(e.j.prenom)+'</strong></td>'
+          +'<td>'+esc(e.j.section)+'</td>'
           +'<td style="text-align:center;font-weight:700">'+e.v+' '+unite+'</td>'
           +'<td><div class="prog-bar"><div class="prog-fill" style="width:'+Math.round(e.v/max*100)+'%"></div></div></td>'
           +'</tr>';
@@ -157,7 +157,7 @@ function exportBilanAnnuel(){
     });
     html += '<div class="page">'
       +'<div class="header"><div><h1>🏅 Résultats sportifs</h1>'
-      +'<div class="sub">'+club+' — Saison '+saison+'</div></div>'
+      +'<div class="sub">'+esc(club)+' — Saison '+saison+'</div></div>'
       +'<div class="badge-sdis">SDIS 27</div></div>'
       +sportHtml+'</div>';
   }
@@ -170,15 +170,15 @@ function exportBilanAnnuel(){
       var grSec2=c.secTheme===2?GRILLE_SEC2:GRILLE_SEC1;
       var sec2=c.grilleSec?calcGrilleTotal(c.grilleSec,grSec2):null;
       var tot=(inc2!==null&&sec2!==null)?inc2+sec2+(c.qcm||0):null;
-      var eq=(c.equipe||[]).map(function(id){var j=getJSP(id);return j?j.nom+' '+j.prenom.charAt(0)+'.':'?';}).join(', ');
-      return '<tr><td>'+d+'</td><td><strong>'+c.titre+'</strong></td><td>'+( c.type||'RTD')+'</td>'
+      var eq=(c.equipe||[]).map(function(id){var j=getJSP(id);return j?esc(j.nom)+' '+esc(j.prenom.charAt(0))+'.':'?';}).join(', ');
+      return '<tr><td>'+d+'</td><td><strong>'+esc(c.titre)+'</strong></td><td>'+esc(c.type||'RTD')+'</td>'
         +'<td style="text-align:center">'+(tot!==null?'<strong>'+tot+'/300</strong>':'—')+'</td>'
         +'<td style="text-align:center">'+(c.rangMan||'—')+'</td>'
         +'<td style="font-size:9px;color:#666">'+eq+'</td></tr>';
     }).join('');
     html += '<div class="page">'
       +'<div class="header"><div><h1>🏆 Concours</h1>'
-      +'<div class="sub">'+club+' — Saison '+saison+'</div></div>'
+      +'<div class="sub">'+esc(club)+' — Saison '+saison+'</div></div>'
       +'<div class="badge-sdis">SDIS 27</div></div>'
       +'<table><thead><tr><th>Date</th><th>Intitulé</th><th>Type</th><th>Score</th><th>Rang</th><th>Équipe</th></tr></thead>'
       +'<tbody>'+concRows+'</tbody></table></div>';
@@ -206,8 +206,8 @@ function exportBilanAnnuel(){
       var myC = saisons_c.filter(function(c){return (c.equipe||[]).includes(j.id);});
 
       html += '<div class="page">'
-        +'<div class="header"><div><h1>👤 '+j.nom+' '+j.prenom+'</h1>'
-        +'<div class="sub"> — '+j.section+' — '+j.statut+' — '+club+' — Saison '+saison+'</div></div>'
+        +'<div class="header"><div><h1>👤 '+esc(j.nom)+' '+esc(j.prenom)+'</h1>'
+        +'<div class="sub"> — '+esc(j.section)+' — '+esc(j.statut)+' — '+esc(club)+' — Saison '+saison+'</div></div>'
         +'<div class="badge-sdis">SDIS 27</div></div>'
         +'<div class="kpi-row">'
         +'<div class="kpi"><div class="kpi-v" style="color:'+assidCol+'">'+(assidJ!==null?assidJ+'%':'—')+'</div><div class="kpi-l">Assiduité</div></div>'
@@ -393,7 +393,7 @@ function renderJspAnnee(){
     var bh=podiumH[ri]||80;
     var y=240-30-bh;
     var col=podiumColors[ri]||'#475569';
-    var nom=e.j.prenom+' '+e.j.nom.charAt(0)+'.';
+    var nom=esc(e.j.prenom)+' '+esc(e.j.nom.charAt(0))+'.';
     podiumSvg+='<rect x="'+x+'" y="'+y+'" width="'+barW+'" height="'+bh+'" rx="6" fill="'+col+'" opacity="0.9"/>'
       +'<text x="'+(x+barW/2)+'" y="'+(y-28)+'" text-anchor="middle" font-size="26">'+medals[ri]+'</text>'
       +'<text x="'+(x+barW/2)+'" y="'+(y-10)+'" text-anchor="middle" font-size="12" fill="var(--txt)" font-weight="700">'+nom+'</text>'
@@ -408,7 +408,7 @@ function renderJspAnnee(){
     var medal = i<3?medals[i]:(i+1)+'';
     return '<tr>'
       +'<td style="text-align:center;font-size:16px">'+medal+'</td>'
-      +'<td><strong>'+j.nom+' '+j.prenom+'</strong> <span style="font-size:11px;color:var(--txt-muted)"></span></td>'
+      +'<td><strong>'+esc(j.nom)+' '+esc(j.prenom)+'</strong> <span style="font-size:11px;color:var(--txt-muted)"></span></td>'
       +'<td style="text-align:center"><span style="color:var(--ok)">'+sc.assiduite+'%</span></td>'
       +'<td style="text-align:center"><span style="color:var(--sdis-bleu)">'+sc.formation+'%</span></td>'
       +'<td style="text-align:center"><span style="color:var(--sdis-or)">'+sc.manoeuvre+'</span></td>'
@@ -425,7 +425,7 @@ function renderJspAnnee(){
   var voteRows = actifs.sort(function(a,b){return a.nom.localeCompare(b.nom);}).map(function(j){
     var val = monVote[j.id]!==undefined ? monVote[j.id] : '';
     return '<div style="display:flex;align-items:center;gap:10px;padding:6px 8px;background:var(--card);border-radius:6px;">'
-      +'<span style="flex:1;font-size:13px">'+j.nom+' '+j.prenom+'</span>'
+      +'<span style="flex:1;font-size:13px">'+esc(j.nom)+' '+esc(j.prenom)+'</span>'
       +'<div style="display:flex;gap:4px;">'
       +[1,2,3,4,5,6,7,8,9,10].map(function(n){
         var sel = val===n;
@@ -573,14 +573,14 @@ function renderHistoriqueList(items){
         // Avatar initiales
         +'<div style="width:28px;height:28px;border-radius:50%;background:'+colorH+';color:#fff;'
         +'display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">'
-        +initials+'</div>'
+        +esc(initials)+'</div>'
         // Action
         +'<div style="flex:1;">'
-          +'<div><span style="font-size:14px">'+icon+'</span> <strong>'+h.action+'</strong>'
-          +(h.details?' <span style="color:var(--txt-muted)">— '+h.details+'</span>':'')
+          +'<div><span style="font-size:14px">'+icon+'</span> <strong>'+esc(h.action)+'</strong>'
+          +(h.details?' <span style="color:var(--txt-muted)">— '+esc(h.details)+'</span>':'')
           +'</div>'
           +'<div style="color:var(--txt-muted);font-size:11px;margin-top:2px;">'
-          +(h.user||'Inconnu')+'</div>'
+          +esc(h.user||'Inconnu')+'</div>'
         +'</div>'
         // Heure
         +'<div style="color:var(--txt-muted);font-size:11px;flex-shrink:0;">'+time+'</div>'
@@ -727,7 +727,7 @@ function renderSuivi(){
         ${assidList.map(e=>{
           const col=e.a>=80?'var(--ok)':e.a>=50?'var(--warn)':'var(--danger)';
           return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--card);border-radius:6px;border:1px solid ${e.a<50?'rgba(192,57,43,.3)':'var(--border)'}">
-                        <span style="flex:1;font-size:13px">${e.j.nom} ${e.j.prenom.charAt(0)}.</span>
+                        <span style="flex:1;font-size:13px">${esc(e.j.nom)} ${esc(e.j.prenom.charAt(0))}.</span>
             <span style="font-weight:700;font-size:13px;color:${col}">${e.a}%</span>
           </div>`;
         }).join('')}
@@ -741,7 +741,7 @@ function renderSuivi(){
   if(decrocheurs.length){
     html = `<div class="stats-card" style="border-color:rgba(192,57,43,.4);background:rgba(192,57,43,.06)">
       <h3 style="color:var(--danger)">⚠️ JSP en décrochage (< 50%)</h3>
-      <div style="font-size:13px;color:var(--txt)">${decrocheurs.map(e=>`${e.j.nom} ${e.j.prenom} (${e.a}%)`).join(' · ')}</div>
+      <div style="font-size:13px;color:var(--txt)">${decrocheurs.map(e=>`${esc(e.j.nom)} ${esc(e.j.prenom)} (${e.a}%)`).join(' · ')}</div>
     </div>` + html;
   }
 
@@ -846,7 +846,7 @@ async function loadUsersList(){
         return '<option value="'+kv[0]+'"'+(u.role===kv[0]?' selected':'')+'>'+kv[1].label+'</option>';
       }).join('');
       html += '<div style="display:flex;align-items:center;gap:8px;padding:6px;background:var(--card);border-radius:6px;font-size:12px;margin-bottom:4px;">'
-        +'<span style="flex:1">'+u.nom+' <span style="color:var(--txt-muted)">('+u.email+')</span></span>'
+        +'<span style="flex:1">'+esc(u.nom)+' <span style="color:var(--txt-muted)">('+esc(u.email)+')</span></span>'
         +'<select data-docid="'+d.id+'" onchange="setUserRole(this.dataset.docid,this.value)" style="background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--txt);padding:2px 6px;font-size:11px;outline:none">'
         +opts+'</select>'
         +'</div>';

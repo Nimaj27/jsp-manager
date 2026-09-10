@@ -20,7 +20,7 @@ function renderConcours(){
   const list=[...concours].sort((a,b)=>b.date.localeCompare(a.date));
   el.innerHTML=list.map(c=>{
     const d=new Date(c.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
-    const equipe=(c.equipe||[]).map(getJSP).filter(Boolean).map(j=>j.prenom+' '+j.nom.charAt(0)+'.').join(' · ');
+    const equipe=(c.equipe||[]).map(getJSP).filter(Boolean).map(j=>esc(j.prenom)+' '+esc(j.nom.charAt(0))+'.').join(' · ');
     const totalInc=c.grilleInc?calcGrilleTotal(c.grilleInc,GRILLE_INC):null;
     const grSec=c.secTheme===2?GRILLE_SEC2:GRILLE_SEC1;
     const totalSec=c.grilleSec?calcGrilleTotal(c.grilleSec,grSec):null;
@@ -28,8 +28,8 @@ function renderConcours(){
     const t300=(totalInc!==null&&totalSec!==null)?totalInc+totalSec+qcm:null;
     return '<div class="stats-card" style="margin-bottom:10px">'+
       '<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">'+
-        '<span class="badge badge-gold">🏆 '+c.type+'</span>'+
-        '<strong style="font-size:14px">'+c.titre+'</strong>'+
+        '<span class="badge badge-gold">🏆 '+esc(c.type)+'</span>'+
+        '<strong style="font-size:14px">'+esc(c.titre)+'</strong>'+
         '<span style="font-size:12px;color:var(--txt-muted);margin-left:auto">'+d+'</span>'+
         '<button class="btn btn-ghost btn-icon" onclick="openConcoursModal('+c.id+')">✏️</button>'+
       '</div>'+
@@ -40,7 +40,7 @@ function renderConcours(){
         '<div style="background:var(--sdis-bleu);border-radius:var(--radius-sm);padding:10px"><div style="font-size:22px;font-weight:700;color:var(--sdis-or)">'+(t300!==null?t300+'/300':c.rangMan||'—')+'</div><div style="font-size:11px;color:rgba(255,255,255,.7)">Total / Rang</div></div>'+
       '</div>'+
       (equipe?'<div style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px;font-size:12px;color:var(--txt-muted)"><strong style="color:var(--txt)">Équipe :</strong> '+equipe+'</div>':'')+
-      (c.notes?'<div style="font-size:12px;color:var(--txt-muted);margin-top:6px">'+c.notes+'</div>':'')+
+      (c.notes?'<div style="font-size:12px;color:var(--txt-muted);margin-top:6px">'+esc(c.notes)+'</div>':'')+
       '<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">'+
         '<button class="btn btn-sm" onclick="loadGrilleFromConcours('+c.id+',\'inc\')">🔥 Grille incendie</button>'+
         '<button class="btn btn-sm" onclick="loadGrilleFromConcours('+c.id+',\'sec\')">🚑 Grille secours</button>'+
@@ -81,7 +81,7 @@ function openConcoursModal(id){
     const on=equipe.includes(j.id);
     return '<label class="ceq-label" data-id="'+j.id+'" style="display:flex;align-items:center;gap:6px;padding:5px 9px;border-radius:6px;cursor:pointer;font-size:13px;background:'+(on?'rgba(0,48,135,.2)':'transparent')+';border:1px solid '+(on?'rgba(0,80,200,.4)':'var(--border)')+'">'+
       '<input type="checkbox" '+(on?'checked':'')+' onchange="toggleCeq(this)" style="accent-color:var(--sdis-bleu)">'+
-      j.nom+' '+j.prenom+'</label>';
+      esc(j.nom)+' '+esc(j.prenom)+'</label>';
   }).join(''):'<span style="color:var(--txt-muted);font-size:13px">Aucun JSP actif.</span>';
   updateCeqCount();
   document.getElementById('modal-concours').classList.add('open');
@@ -143,7 +143,7 @@ function renderPrepEquipe(){
   el.innerHTML=actifs.length?actifs.map(j=>{
     return '<label data-id="'+j.id+'" class="ceq-label" style="display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:12px;background:transparent;border:1px solid var(--border)">'+
       '<input type="checkbox" style="accent-color:var(--sdis-bleu)" onchange="updatePrepCount()">'+
-      j.nom+' '+j.prenom+'</label>';
+      esc(j.nom)+' '+esc(j.prenom)+'</label>';
   }).join(''):'<span style="color:var(--txt-muted);font-size:13px">Ajoutez des JSP dans la section JSP.</span>';
   updatePrepCount();
 }
@@ -171,7 +171,7 @@ function renderTirageResult(){
       if(!j)return '';
       return '<div class="tirage-role '+tc[r.role.type]+'">'+
         '<span class="tr-role">'+r.role.label+'</span>'+
-        '<span class="tr-name"><strong>'+j.nom+' '+j.prenom+'</strong> <span style="font-size:11px;color:var(--txt-muted)">'+j.section+'</span></span>'+
+        '<span class="tr-name"><strong>'+esc(j.nom)+' '+esc(j.prenom)+'</strong> <span style="font-size:11px;color:var(--txt-muted)">'+esc(j.section)+'</span></span>'+
         '<span style="font-size:11px;color:var(--txt-muted)">'+r.role.full+'</span>'+
       '</div>';
     }).join('');

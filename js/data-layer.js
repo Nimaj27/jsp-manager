@@ -302,6 +302,17 @@ function showSaveInd(){
   saveTimer = setTimeout(()=>el.classList.remove('show'), 1400);
 }
 
+// ── Échappement HTML (anti-XSS) ──────────────────────────────
+// À utiliser sur toute donnée saisie par un utilisateur (nom, notes...)
+// avant de l'insérer dans du innerHTML — jamais sur du texte déjà fixe
+// (libellés, classes CSS) ni sur du texte destiné à un message WhatsApp/SMS.
+function esc(v){
+  if(v===null||v===undefined) return '';
+  return String(v).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
 function getJSP(id){ return JSPs.find(j=>j.id===id); }
 function getSaison(){
   const m = new Date().getMonth();
@@ -312,7 +323,7 @@ function getSaison(){
 // ── Sections ────────────────────────────────────────────────
 function renderSectionSelect(){
   const sel = document.getElementById('section-select');
-  sel.innerHTML = sections.map(s=>`<option value="${s.id}" ${s.id===currentSectionId?'selected':''}>${s.nom}</option>`).join('');
+  sel.innerHTML = sections.map(s=>`<option value="${s.id}" ${s.id===currentSectionId?'selected':''}>${esc(s.nom)}</option>`).join('');
 }
 function switchSection(id){
   currentSectionId = parseInt(id);

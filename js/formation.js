@@ -110,7 +110,7 @@ function renderFormation(){
   const prev = sel.value;
   const actifs = JSPs.filter(j=>j.statut!=='Licencié').sort((a,b)=>(+a.numero)-(+b.numero));
   sel.innerHTML = actifs.length
-    ? actifs.map(j=>'<option value="'+j.id+'"> — '+j.nom+' '+j.prenom+' </option>').join('')
+    ? actifs.map(j=>'<option value="'+j.id+'"> — '+esc(j.nom)+' '+esc(j.prenom)+' </option>').join('')
     : '<option value="">Aucun JSP</option>';
   if(prev && actifs.find(j=>String(j.id)===prev)) sel.value = prev;
 
@@ -145,7 +145,7 @@ function renderFormation(){
     + '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">'
     + '<div style="display:flex;align-items:center;gap:10px">'
     + '<span class="num-badge" style="height:30px;font-size:14px">'+jsp.numero+'</span>'
-    + '<div><div style="font-weight:700;font-size:15px">'+jsp.nom+' '+jsp.prenom+'</div>'
+    + '<div><div style="font-weight:700;font-size:15px">'+esc(jsp.nom)+' '+esc(jsp.prenom)+'</div>'
     + '<div style="font-size:12px;color:var(--txt-muted)">'+jsp.section+' · '+jsp.statut+'</div></div></div>'
     + '<button class="btn btn-blue btn-sm" onclick="printFiche('+jspId+')">🖨️ Fiche bilan</button></div>'
     + '<div class="kpi-row">'
@@ -181,7 +181,7 @@ function renderFormation(){
         const noteTxt = (note!==''&&note!=null&&note!==undefined) ? note+'/20' : '—';
         html += '<div onclick="openEval('+jspId+',\''+cy+'\','+it.idx+')" style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--card);border-radius:6px;cursor:pointer;border-left:3px solid '+col+';margin-bottom:3px">'
           + '<span style="flex:1;font-size:13px">'+it.comp+'</span>'
-          + (e&&e.obs?'<span title="'+e.obs.replace(/"/g,'&quot;')+'" style="font-size:11px;opacity:.6">💬</span>':'')
+          + (e&&e.obs?'<span title="'+esc(e.obs)+'" style="font-size:11px;opacity:.6">💬</span>':'')
           + '<span style="font-weight:700;font-size:13px;color:'+col+';min-width:48px;text-align:right">'+noteTxt+'</span>'
           + '<span class="badge" style="background:'+col+'22;color:'+col+';min-width:74px;text-align:center">'+STATUT_LABEL[st]+'</span></div>';
       });
@@ -355,11 +355,11 @@ function printFiche(jspId){
       var c3 = n.note>=14?'#16a34a':n.note>=8?'#d97706':'#dc2626';
       var vs = Object.values(n.criteres||{});
       var cm = vs.length?Math.round(vs.reduce(function(a,b){return a+b;},0)/vs.length):null;
-      return '<tr><td>'+d3+'</td><td>'+sl+'</td>'
-        +'<td style="text-align:center;font-size:9px">'+(n.role||'—')+'</td>'
+      return '<tr><td>'+d3+'</td><td>'+esc(sl)+'</td>'
+        +'<td style="text-align:center;font-size:9px">'+esc(n.role||'—')+'</td>'
         +'<td style="text-align:center">'+(cm!==null?cm+'/20':'—')+'</td>'
         +'<td style="text-align:center;font-weight:700;color:'+c3+'">'+n.note+'/20</td>'
-        +'<td style="font-size:9px;color:#666">'+(n.obs||'')+'</td></tr>';
+        +'<td style="font-size:9px;color:#666">'+esc(n.obs||'')+'</td></tr>';
     }).join('');
     notesManSection = '<h3 style="background:#003087;color:#fff;padding:6px 10px;margin:16px 0 0;font-size:13px;border-radius:4px">Notes de manoeuvre</h3>'
       +'<table style="width:100%;border-collapse:collapse;font-size:10px"><thead>'
@@ -437,7 +437,7 @@ function printFiche(jspId){
   var progPct = allComps ? Math.round(allValid/allComps*100) : 0;
 
   // ── HTML final ────────────────────────────────────────────
-  var html = '<!DOCTYPE html><html lang="fr"><head>'+'<title>Fiche '+jsp.nom+' '+jsp.prenom+'</title>'
+  var html = '<!DOCTYPE html><html lang="fr"><head>'+'<title>Fiche '+esc(jsp.nom)+' '+esc(jsp.prenom)+'</title>'
     +'<style>'
     +'*{box-sizing:border-box;margin:0;padding:0}'
     +'body{font-family:Arial,sans-serif;color:#1a1a1a;max-width:820px;margin:0 auto;padding:20px;font-size:12px}'
@@ -468,7 +468,7 @@ function printFiche(jspId){
     +'<div class="sdis-badge">SDIS 27</div></div>'
 
     +'<div class="info-grid">'
-    +'<div class="info-item"><b>Nom \u2014 Pr\u00e9nom</b>'+jsp.nom+' '+jsp.prenom+'</div>'
+    +'<div class="info-item"><b>Nom \u2014 Pr\u00e9nom</b>'+esc(jsp.nom)+' '+esc(jsp.prenom)+'</div>'
     +'<div class="info-item"><b>N\u00b0 adh\u00e9rent</b>'+jsp.numero+'</div>'
     +'<div class="info-item"><b>Section</b>'+(jsp.section||'—')+'</div>'
     +'<div class="info-item"><b>Cat\u00e9gorie</b>'+(jsp.categorie||'—')+' \u2014 Statut : '+(jsp.statut||'—')+'</div>'

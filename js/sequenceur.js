@@ -124,12 +124,12 @@ function renderSequenceur(){
         '<div style="flex:1;min-width:200px;">' +
           '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px;">' +
             badge +
-            '<span class="badge badge-gray">'+s.cycle+'</span>' +
-            '<strong style="font-size:14px">'+s.titre+'</strong>' +
+            '<span class="badge badge-gray">'+esc(s.cycle)+'</span>' +
+            '<strong style="font-size:14px">'+esc(s.titre)+'</strong>' +
           '</div>' +
           '<div style="font-size:12px;color:var(--txt-muted)">'+
             '📅 '+d+(s.heure?' à '+s.heure:'')+
-            (s.lieu?' · 📍 '+s.lieu:'')+
+            (s.lieu?' · 📍 '+esc(s.lieu):'')+
             (s.effectif?' · 👥 '+s.effectif+' JSP':'')+
             ' · ⏱️ '+dureeTotal+' min'+
           '</div>' +
@@ -141,8 +141,8 @@ function renderSequenceur(){
         '</div>' +
       '</div>' +
       timeline +
-      (s.objectifs?'<div style="font-size:12px;color:var(--txt-muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">🎯 '+s.objectifs+'</div>':'')+
-      (s.materiel?'<div style="font-size:12px;color:var(--txt-muted);margin-top:4px">🎒 '+s.materiel+'</div>':'')+
+      (s.objectifs?'<div style="font-size:12px;color:var(--txt-muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">🎯 '+esc(s.objectifs)+'</div>':'')+
+      (s.materiel?'<div style="font-size:12px;color:var(--txt-muted);margin-top:4px">🎒 '+esc(s.materiel)+'</div>':'')+
     '</div>';
   }).join('');
 }
@@ -166,7 +166,7 @@ function renderTimeline(activites, heureDebut){
         '<div style="width:3px;height:28px;border-radius:2px;background:'+coul+';flex-shrink:0;"></div>'+
         '<span style="flex:1;font-size:12px;">'+a.label+'</span>'+
         '<span style="font-size:11px;color:var(--txt-muted);min-width:40px;text-align:right">'+a.duree+' min</span>'+
-        (a.notes?'<span style="font-size:10px;color:var(--txt-dim)" title="'+a.notes+'">💬</span>':'')+
+        (a.notes?'<span style="font-size:10px;color:var(--txt-dim)" title="'+esc(a.notes)+'">💬</span>':'')+
       '</div>';
     }).join('')+
   '</div>';
@@ -239,7 +239,7 @@ function renderActivitesList(){
       '<input type="number" value="'+a.duree+'" min="5" max="180" step="5" '+
         'style="width:55px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--txt);padding:3px 5px;font-size:12px;outline:none;text-align:center" '+
         'onchange="updateActiviteDuree('+i+',this.value)"> <span style="font-size:11px;color:var(--txt-muted)">min</span>'+
-      '<input type="text" value="'+(a.notes||'')+'" placeholder="Note…" '+
+      '<input type="text" value="'+esc(a.notes||'')+'" placeholder="Note…" '+
         'style="flex:1;max-width:120px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--txt);padding:3px 6px;font-size:11px;outline:none" '+
         'onchange="updateActiviteNote('+i+',this.value)">'+
       '<button class="btn btn-ghost btn-icon" style="padding:4px 7px;font-size:12px" onclick="moveActivite('+i+',-1)" '+(i===0?'disabled':'')+'>▲</button>'+
@@ -383,7 +383,7 @@ function printMateriel(seqId){
       +'<span style="font-family:monospace;font-size:10px;color:#888;min-width:38px">'+hStr+'</span>'
       +'<span style="flex:1">'+a.label+'</span>'
       +'<span style="font-size:10px;color:#888">'+a.duree+' min</span>'
-      +(a.notes?'<span style="font-size:10px;color:#666;font-style:italic;margin-left:6px">'+a.notes+'</span>':'')
+      +(a.notes?'<span style="font-size:10px;color:#666;font-style:italic;margin-left:6px">'+esc(a.notes)+'</span>':'')
       +'</div>';
   }).join('');
 
@@ -395,7 +395,7 @@ function printMateriel(seqId){
       +'<div class="section-title"><span>🎒 Matériel général</span><span style="font-weight:400;font-size:10px">'+matGlobal.length+' article(s)</span></div>'
       +'<div class="checklist">'
       +matGlobal.map(function(m){
-        return '<div class="check-item"><div class="check-box"></div><span class="check-label">'+m+'</span></div>';
+        return '<div class="check-item"><div class="check-box"></div><span class="check-label">'+esc(m)+'</span></div>';
       }).join('')
       +'</div></div>';
   }
@@ -424,7 +424,7 @@ function printMateriel(seqId){
   }
 
   // ── HTML final ───────────────────────────────────────────
-  var html = '<!DOCTYPE html><html lang="fr"><head>'+'<title>Matériel — '+s.titre+'</title>'
+  var html = '<!DOCTYPE html><html lang="fr"><head>'+'<title>Matériel — '+esc(s.titre)+'</title>'
     +'<style>'+CSS+'</style></head><body>'
 
     +'<button onclick="window.print()">🖨️ Imprimer</button>'
@@ -435,11 +435,11 @@ function printMateriel(seqId){
     +'<div class="badge">SDIS 27</div></div>'
 
     +'<div class="info-grid">'
-    +'<div class="info-item"><b>Séance</b>'+s.titre+'</div>'
+    +'<div class="info-item"><b>Séance</b>'+esc(s.titre)+'</div>'
     +'<div class="info-item"><b>Date</b>'+dCap+'</div>'
     +'<div class="info-item"><b>Durée totale</b>'+duree+' min'+(s.effectif?' · '+s.effectif+' JSP':'')+'</div>'
-    +(s.lieu?'<div class="info-item"><b>Lieu</b>'+s.lieu+'</div>':'')
-    +(s.objectifs?'<div class="info-item" style="grid-column:span 2"><b>Objectifs</b>'+s.objectifs+'</div>':'')
+    +(s.lieu?'<div class="info-item"><b>Lieu</b>'+esc(s.lieu)+'</div>':'')
+    +(s.objectifs?'<div class="info-item" style="grid-column:span 2"><b>Objectifs</b>'+esc(s.objectifs)+'</div>':'')
     +'</div>'
 
     // Déroulé
@@ -537,8 +537,8 @@ function renderModelesList(){
       return '<div class="lcard">'+
         '<div class="lcard-icon">📋</div>'+
         '<div class="lcard-main">'+
-          '<div class="lcard-title">'+m.titre+'</div>'+
-          '<div class="lcard-sub">'+m.cycle+' · '+(m.activites||[]).length+' activités · '+duree+' min</div>'+
+          '<div class="lcard-title">'+esc(m.titre)+'</div>'+
+          '<div class="lcard-sub">'+esc(m.cycle)+' · '+(m.activites||[]).length+' activités · '+duree+' min</div>'+
         '</div>'+
         '<div class="lcard-actions">'+
           '<button class="btn btn-primary btn-sm" onclick="openSeqFromModele(\''+m.id+'\')">Utiliser</button>'+
