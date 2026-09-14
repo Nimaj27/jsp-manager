@@ -1,10 +1,16 @@
 // ════════════════════════════════════════════════════════════
 //  QR CODE — Page publique
 // ════════════════════════════════════════════════════════════
+function publicPlanningUrl(){
+  return location.origin + location.pathname.replace(/[^/]*$/, '') + 'jsp_public.html';
+}
+
 function generateQRCode(){
   var canvas = document.getElementById('qr-canvas');
   if(!canvas) return;
-  var url = 'https://jsp-pacy.netlify.app/jsp_public.html';
+  var url = publicPlanningUrl();
+  var urlEl = document.getElementById('qr-url');
+  if(urlEl) urlEl.textContent = url.replace(/^https?:\/\//, '');
   // Utiliser l'API QR server (pas de lib nécessaire)
   var img = new Image();
   img.crossOrigin = 'anonymous';
@@ -18,7 +24,7 @@ function generateQRCode(){
 }
 
 function printQRCode(){
-  var url = 'https://jsp-pacy.netlify.app/jsp_public.html';
+  var url = publicPlanningUrl();
   var canvas = document.getElementById('qr-canvas');
   var qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(url);
   var win = window.open('','_blank');
