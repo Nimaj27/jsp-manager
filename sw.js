@@ -4,7 +4,7 @@
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
 
-const CACHE_NAME = 'jsp-manager-v5';
+const CACHE_NAME = 'jsp-manager-v6';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDSSMGVAQ2ygh2KjPVwePxBnq8_oO6Bzik",
@@ -69,7 +69,7 @@ self.addEventListener('install', function(event){
         'js/seances-timeline.js', 'js/notes-sport.js',
         'js/sport-challenge-suivi.js', 'js/concours.js',
         'js/formation.js', 'js/sequenceur.js',
-        'js/suivi-parametres.js',
+        'js/suivi-parametres.js', 'js/changelog.js',
         'img/logo-small.jpg', 'img/logo-large.jpg',
       ]).catch(function(e){ console.warn('SW precache:', e); });
     }).then(function(){ return self.skipWaiting(); })

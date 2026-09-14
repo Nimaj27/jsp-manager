@@ -835,6 +835,27 @@
   </div>
 </div>
 
+<!-- ══════════ FOOTER ══════════ -->
+<footer style="display:flex;align-items:center;justify-content:center;gap:10px;padding:16px 20px;margin-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--txt-muted);">
+  <span>JSP Manager <strong id="app-version" style="color:var(--txt)"></strong></span>
+  <span style="opacity:.4">·</span>
+  <button class="btn btn-ghost btn-sm" onclick="openChangelog()" style="position:relative;">
+    🆕 Nouveautés
+    <span id="changelog-badge" style="display:none;position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:var(--danger);"></span>
+  </button>
+</footer>
+
+<!-- ══════════ MODAL CHANGELOG ══════════ -->
+<div class="modal-bg" id="modal-changelog">
+  <div class="modal" style="max-width:560px">
+    <h2>🆕 Nouveautés</h2>
+    <div id="changelog-list" style="max-height:60vh;overflow-y:auto;display:flex;flex-direction:column;gap:16px;"></div>
+    <div class="modal-footer" style="margin-top:14px">
+      <button class="btn btn-primary" style="margin-left:auto" onclick="closeModal('modal-changelog')">Fermer</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════ MODAL JSP ══════════ -->
 <div class="modal-bg" id="modal-jsp">
   <div class="modal">
@@ -1110,6 +1131,7 @@
 
 <script src="js/sequenceur.js"></script>
 <script src="js/suivi-parametres.js"></script>
+<script src="js/changelog.js"></script>
 </div><!-- /app-wrapper -->
 
 <!-- ══════════ MODE APPEL PLEIN ÉCRAN ══════════ -->
