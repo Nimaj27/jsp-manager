@@ -181,6 +181,13 @@ function renderAccueil(){
   if(!el){ setTimeout(renderAccueil, 200); return; }
 
   var html = '';
+  if(typeof CHANGELOG!=='undefined' && CHANGELOG.length && localStorage.getItem('jsp_changelog_seen')!==CHANGELOG[0].date){
+    html += '<div id="changelog-banner" class="stats-card" style="grid-column:span 2;border-left:4px solid var(--sdis-or);padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;" onclick="openChangelog()">'
+      +'<span style="font-size:20px">🆕</span>'
+      +'<div style="flex:1"><strong style="color:var(--sdis-or)">Nouveautés disponibles</strong> — cliquez pour voir ce qui a changé</div>'
+      +'<span style="color:var(--txt-muted);font-size:12px">→</span>'
+      +'</div>';
+  }
   var actifs = JSPs.filter(function(j){return j.statut==='Actif';});
   var nbActifs = actifs.length;
   var seancesSaison = seances.filter(function(s){return s.saison===saison;})

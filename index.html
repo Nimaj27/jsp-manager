@@ -110,6 +110,8 @@
       ouvrez d'abord l'appli dans Safari/Chrome puis connectez-vous.
     </span>
   </div>
+  <button onclick="openChangelog()" style="background:none;border:none;color:#8899bb;font-size:11px;
+    margin-top:16px;cursor:pointer;text-decoration:underline;">🆕 Voir les nouveautés</button>
   <script src="js/pwa-hints.js"></script>
 </div>
 
@@ -845,17 +847,6 @@
   </button>
 </footer>
 
-<!-- ══════════ MODAL CHANGELOG ══════════ -->
-<div class="modal-bg" id="modal-changelog">
-  <div class="modal" style="max-width:560px">
-    <h2>🆕 Nouveautés</h2>
-    <div id="changelog-list" style="max-height:60vh;overflow-y:auto;display:flex;flex-direction:column;gap:16px;"></div>
-    <div class="modal-footer" style="margin-top:14px">
-      <button class="btn btn-primary" style="margin-left:auto" onclick="closeModal('modal-changelog')">Fermer</button>
-    </div>
-  </div>
-</div>
-
 <!-- ══════════ MODAL JSP ══════════ -->
 <div class="modal-bg" id="modal-jsp">
   <div class="modal">
@@ -1133,6 +1124,17 @@
 <script src="js/suivi-parametres.js"></script>
 <script src="js/changelog.js"></script>
 </div><!-- /app-wrapper -->
+
+<!-- ══════════ MODAL CHANGELOG (accessible même déconnecté) ══════════ -->
+<div class="modal-bg" id="modal-changelog" style="z-index:10001">
+  <div class="modal" style="max-width:560px">
+    <h2>🆕 Nouveautés</h2>
+    <div id="changelog-list" style="max-height:60vh;overflow-y:auto;display:flex;flex-direction:column;gap:16px;"></div>
+    <div class="modal-footer" style="margin-top:14px">
+      <button class="btn btn-primary" style="margin-left:auto" onclick="closeModal('modal-changelog')">Fermer</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════ MODE APPEL PLEIN ÉCRAN ══════════ -->
 <div id="appel-overlay">

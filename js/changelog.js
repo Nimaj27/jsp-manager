@@ -43,6 +43,8 @@ function openChangelog(){
   document.getElementById('modal-changelog').classList.add('open');
   if(CHANGELOG.length) localStorage.setItem('jsp_changelog_seen', CHANGELOG[0].date);
   updateChangelogBadge();
+  var banner = document.getElementById('changelog-banner');
+  if(banner) banner.remove();
 }
 
 var _appVersionEl = document.getElementById('app-version');
