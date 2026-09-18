@@ -61,7 +61,7 @@ self.addEventListener('install', function(event){
     caches.open(CACHE_NAME).then(function(cache){
       return cache.addAll([
         './', 'index.html', 'manifest.json',
-        'jsp_public.html',
+        'jsp_public.html', 'guide.html',
         'css/style.css',
         'js/firebase-init.js', 'js/header-actions.js',
         'js/pwa-hints.js', 'js/pwa-install.js',

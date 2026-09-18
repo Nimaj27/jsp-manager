@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0f1e">
+  <title>JSP Manager — Guide d'utilisation</title>
+  <link rel="icon" type="image/jpeg" href="img/logo-small.jpg">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0a0f1e;--panel:#111827;--card:#1a2236;--border:#1e3a5f;
+      --txt:#e2e8f0;--txt-muted:#94a3b8;--sdis-bleu:#003087;--sdis-bleu-clair:#3c5af0;
+      --sdis-or:#e8a020;--ok:#16a34a;--warn:#d97706;--danger:#dc2626;
+      --radius:12px;--radius-sm:8px;
+    }
+    html{-webkit-text-size-adjust:100%;}
+    body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      min-height:100vh;line-height:1.55;font-size:16px;}
+
+    header{background:var(--panel);border-bottom:3px solid var(--sdis-bleu);padding:16px 18px;
+      display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
+    header img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid var(--sdis-or);flex-shrink:0;}
+    header h1{font-size:16px;font-weight:700;color:var(--sdis-or);line-height:1.3;}
+    header p{font-size:11px;color:var(--txt-muted);}
+
+    .container{max-width:680px;margin:0 auto;padding:18px 16px 60px;}
+
+    /* Sommaire */
+    .toc{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+      padding:14px 16px;margin-bottom:22px;}
+    .toc h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-muted);margin-bottom:10px;}
+    .toc ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;}
+    .toc a{color:var(--sdis-bleu-clair);text-decoration:none;font-size:14px;display:block;padding:4px 0;}
+    .toc a:active{opacity:.7;}
+
+    section{margin-bottom:28px;scroll-margin-top:76px;}
+    section h2{font-size:19px;color:var(--sdis-or);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+    section > p{margin-bottom:10px;font-size:15px;color:var(--txt);}
+    section > p.muted{color:var(--txt-muted);font-size:13px;}
+
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+      padding:14px 16px;margin-bottom:12px;}
+    .card h3{font-size:15px;color:var(--txt);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+    .card p{font-size:14px;color:var(--txt-muted);}
+    .card ul{margin:6px 0 0 18px;font-size:14px;color:var(--txt-muted);}
+    .card ul li{margin-bottom:4px;}
+
+    table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px;}
+    th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);}
+    th{color:var(--sdis-or);font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
+    td{color:var(--txt);}
+
+    .callout{background:rgba(232,160,32,.08);border:1px solid rgba(232,160,32,.3);border-left:4px solid var(--sdis-or);
+      border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--txt);margin-top:8px;}
+
+    .faq-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);
+      padding:12px 14px;margin-bottom:8px;}
+    .faq-item strong{display:block;color:var(--sdis-or);font-size:14px;margin-bottom:4px;}
+    .faq-item p{font-size:13px;color:var(--txt-muted);}
+
+    a.backtop{position:fixed;bottom:18px;right:18px;background:var(--sdis-bleu);color:#fff;
+      width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      text-decoration:none;font-size:18px;box-shadow:0 4px 14px rgba(0,0,0,.4);}
+
+    @media (min-width:520px){
+      .toc ul{grid-template-columns:1fr 1fr 1fr;}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="img/logo-small.jpg" alt="Logo JSP Pacy-sur-Eure">
+  <div>
+    <h1>Guide d'utilisation</h1>
+    <p>JSP Manager — JSP Pacy-sur-Eure · SDIS 27</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="toc">
+    <h2>Sommaire</h2>
+    <ul>
+      <li><a href="#connexion">🔑 Se connecter</a></li>
+      <li><a href="#roles">👥 Les rôles</a></li>
+      <li><a href="#accueil">🏠 Accueil</a></li>
+      <li><a href="#jsp">👤 JSP</a></li>
+      <li><a href="#seances">📅 Séances</a></li>
+      <li><a href="#sport">🏃 Sport</a></li>
+      <li><a href="#concours">🏆 Concours</a></li>
+      <li><a href="#sequenceur">📝 Séquenceur</a></li>
+      <li><a href="#formation">🎓 Formation</a></li>
+      <li><a href="#suivi">📊 Suivi</a></li>
+      <li><a href="#parametres">⚙️ Paramètres</a></li>
+      <li><a href="#transverse">📱 Fonctions transverses</a></li>
+      <li><a href="#faq">❓ Questions fréquentes</a></li>
+    </ul>
+  </div>
+
+  <section id="connexion">
+    <h2>🔑 Se connecter</h2>
+    <p>Ouvrez l'application et cliquez sur <strong>Se connecter avec Google</strong>, puis choisissez votre compte.</p>
+    <div class="card">
+      <p>Deux cas de figure :</p>
+      <ul>
+        <li><strong>Vous êtes le tout premier</strong> à vous connecter → vous devenez automatiquement Chef de section.</li>
+        <li><strong>La section existe déjà</strong> → votre compte passe en attente ("⏳ Accès en attente"). Un chef de section doit valider votre accès avant que vous puissiez utiliser l'application.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="roles">
+    <h2>👥 Les rôles</h2>
+    <table>
+      <thead><tr><th>Rôle</th><th>Consulter</th><th>Modifier</th></tr></thead>
+      <tbody>
+        <tr><td>Chef de section</td><td>Tout</td><td>Tout + gestion des accès</td></tr>
+        <tr><td>Formateur</td><td>Tout</td><td>Tout sauf les accès</td></tr>
+        <tr><td>Aide-formateur</td><td>Tout</td><td>Présences uniquement</td></tr>
+      </tbody>
+    </table>
+    <p class="muted">Un chef de section change les rôles depuis ⚙️ Paramètres → Gestion des accès.</p>
+  </section>
+
+  <section id="accueil">
+    <h2>🏠 Accueil</h2>
+    <p>Tableau de bord : prochaine séance (avec bouton pour convoquer), assiduité moyenne, formation validée, alertes (assiduité faible, certificats médicaux expirés ou bientôt expirés), aperçu des derniers résultats sportifs et concours, et un résumé chiffré de la section.</p>
+  </section>
+
+  <section id="jsp">
+    <h2>👤 JSP</h2>
+    <p>Liste des jeunes sapeurs-pompiers : fiche par JSP (nom, section JSP1 à JSP4, statut, coordonnées, notes), recherche et filtres, import/export CSV, et suivi des <strong>certificats médicaux</strong> (sous-onglet dédié, avec alerte avant expiration).</p>
+  </section>
+
+  <section id="seances">
+    <h2>📅 Séances</h2>
+    <p>Liste des séances d'entraînement, avec un mode <strong>Appel</strong> en plein écran pour cocher les présences.</p>
+    <div class="card">
+      <ul>
+        <li><strong>Convoquer</strong> les JSP par WhatsApp/SMS</li>
+        <li><strong>Générer</strong> automatiquement le calendrier d'une saison (samedis hors vacances)</li>
+        <li>Ouvrir le <strong>planning public</strong> via QR code</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="sport">
+    <h2>🏃 Sport</h2>
+    <div class="card"><h3>🏅 Classements & 📈 Progression</h3><p>Résultats par épreuve et courbe individuelle.</p></div>
+    <div class="card"><h3>🥇 Podium</h3><p>Podium d'une épreuve sur une saison.</p></div>
+    <div class="card"><h3>🎖️ Challenge Qualité</h3><p>Épreuves officielles JSP (vitesse, demi-fond, hauteur, poids, corde, PSSP), grilles de points par catégorie d'âge et sexe.</p></div>
+  </section>
+
+  <section id="concours">
+    <h2>🏆 Concours</h2>
+    <p>Préparation aux concours et manœuvres officielles (RTN/RTD).</p>
+    <div class="card"><h3>🎲 Préparation RTN</h3><p>Tirage au sort des rôles (incendie/secours/QCM) et chronomètre de manœuvre.</p></div>
+    <div class="card"><h3>🔥🚑 Grilles de notation</h3><p>Incendie (140 pts) et Secours (140 pts, thèmes 1 et 2).</p></div>
+  </section>
+
+  <section id="sequenceur">
+    <h2>📝 Séquenceur</h2>
+    <p>Planification détaillée d'une séance : déroulé minuté par activité, matériel nécessaire, objectifs pédagogiques. Génère une <strong>fiche matériel imprimable</strong>. Les séances peuvent être enregistrées comme <strong>modèles réutilisables</strong>.</p>
+  </section>
+
+  <section id="formation">
+    <h2>🎓 Formation</h2>
+    <p>Suivi pédagogique individuel selon le référentiel national JSP (cycles JSP1 à JSP4) : notes par compétence, statut de validation. Référentiel personnalisable (⚙️ Référentiel) selon les spécificités de votre SDIS.</p>
+  </section>
+
+  <section id="suivi">
+    <h2>📊 Suivi</h2>
+    <div class="card"><h3>📊 Statistiques</h3><p>Assiduité individuelle, alertes de décrochage.</p></div>
+    <div class="card"><h3>📅 Calendrier</h3><p>Vue consolidée : séances, concours, sport, séances planifiées.</p></div>
+    <div class="card"><h3>🏅 JSP de l'année</h3><p>Classement combinant assiduité, formation, manœuvre et sport, avec vote des formateurs.</p></div>
+    <div class="card"><h3>🕐 Historique & 📄 Bilan PDF</h3><p>Journal des modifications, et bilan annuel téléchargeable.</p></div>
+  </section>
+
+  <section id="parametres">
+    <h2>⚙️ Paramètres</h2>
+    <p>Accessible via l'icône ⚙️ en haut à droite :</p>
+    <div class="card">
+      <ul>
+        <li>Nom de l'école/club, durée par défaut d'une manœuvre</li>
+        <li>Export / Import des données (sauvegarde JSON)</li>
+        <li>QR code vers le planning public — à imprimer</li>
+        <li>Import CSV en masse de JSP</li>
+        <li>Notifications push, installation de l'application</li>
+        <li><em>(Chef de section)</em> Gestion des accès et rôles</li>
+        <li>Zone dangereuse : effacer toutes les données</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="transverse">
+    <h2>📱 Fonctions transverses</h2>
+
+    <div class="card">
+      <h3>🌐 Page publique du planning</h3>
+      <p>Le QR code (dans Paramètres) donne accès à une page en lecture seule montrant les prochaines séances — à afficher dans le local, sans connexion requise.</p>
+    </div>
+
+    <div class="card">
+      <h3>🔔 Notifications push</h3>
+      <p>Activez-les dans les Paramètres pour être notifié quand un autre formateur modifie les données, même l'application fermée.</p>
+    </div>
+
+    <div class="card">
+      <h3>📲 Installer l'application</h3>
+      <p>JSP Manager est une PWA : une icône d'installation apparaît dans la barre d'adresse (Chrome/Edge), ou utilisez le bouton dédié dans les Paramètres. Fonctionne ensuite hors connexion.</p>
+      <div class="callout">⚠️ Firefox pour ordinateur ne permet pas l'installation de PWA — utilisez Chrome, Edge ou Safari (mobile).</div>
+    </div>
+
+    <div class="card">
+      <h3>🆕 Nouveautés</h3>
+      <p>Visible sur l'écran de connexion et en haut du tableau de bord : liste les derniers changements de l'application.</p>
+    </div>
+
+    <div class="card">
+      <h3>💾 Sauvegarde et synchronisation</h3>
+      <p>Toutes les données se synchronisent en temps réel entre formateurs connectés. Elles restent aussi disponibles en local sur votre appareil en cas de perte de connexion.</p>
+    </div>
+  </section>
+
+  <section id="faq">
+    <h2>❓ Questions fréquentes</h2>
+
+    <div class="faq-item">
+      <strong>Mon compte reste bloqué sur "Accès en attente"</strong>
+      <p>Un chef de section doit valider votre compte depuis ⚙️ Paramètres → Gestion des accès. Contactez-le directement.</p>
+    </div>
+
+    <div class="faq-item">
+      <strong>Je n'ai pas le droit de modifier certaines données</strong>
+      <p>C'est normal selon votre rôle (voir plus haut). Seul un chef de section peut étendre vos droits.</p>
+    </div>
+
+    <div class="faq-item">
+      <strong>Le bouton d'installation n'apparaît pas</strong>
+      <p>Vérifiez que vous utilisez Chrome, Edge ou Safari (pas Firefox sur ordinateur), et que vous n'avez pas déjà installé l'application sur cet appareil.</p>
+    </div>
+
+    <div class="faq-item">
+      <strong>J'ai une erreur de connexion Google</strong>
+      <p>Si vous utilisez Brave, désactivez les Shields pour le site — ils bloquent parfois la page de connexion Google. Sinon, réessayez avec Chrome ou Edge.</p>
+    </div>
+  </section>
+
+</div>
+
+<a href="#" class="backtop" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;" aria-label="Haut de page">↑</a>
+
+</body>
+</html>
