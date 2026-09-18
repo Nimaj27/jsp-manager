@@ -323,8 +323,12 @@ function esc(v){
 
 function getJSP(id){ return JSPs.find(j=>j.id===id); }
 function getSaison(){
-  const m = new Date().getMonth();
-  const y = new Date().getFullYear();
+  return getSaisonFromDate(new Date());
+}
+function getSaisonFromDate(d){
+  d = (d instanceof Date) ? d : new Date(d);
+  const m = d.getMonth();
+  const y = d.getFullYear();
   return m >= 7 ? `${y}-${String(y+1).slice(2)}` : `${y-1}-${String(y).slice(2)}`;
 }
 

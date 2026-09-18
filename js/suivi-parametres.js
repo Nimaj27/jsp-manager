@@ -296,8 +296,10 @@ function calcScoreAutoJsp(jspId, saison){
   },0);
   var scoreForm = allComps ? Math.round(valComps/allComps*100) : 0;
 
-  // Manœuvre : moyenne des notes /20 → /100
-  var myNotes = notesMan.filter(function(n){return n.jspId===jspId&&n.note!==null;});
+  // Manœuvre : moyenne des notes /20 → /100 (uniquement la saison en cours)
+  var myNotes = notesMan.filter(function(n){
+    return n.jspId===jspId && n.note!==null && (!saison || getSaisonFromDate(n.date)===saison);
+  });
   var scoreMano = myNotes.length
     ? Math.round(myNotes.reduce(function(a,n){return a+n.note;},0)/myNotes.length*5)
     : 0;
