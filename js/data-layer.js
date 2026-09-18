@@ -228,9 +228,18 @@ async function initAppFirebase(){
       }
     }
   } catch(e){
+    // Ne jamais faire "comme si" (ancien filet formateur silencieux) : sans
+    // rôle vérifié côté serveur, l'appli reste bloquée de toute façon (les
+    // règles Firestore refuseront les lectures suivantes). Autant le dire
+    // clairement, avec le message brut, plutôt que montrer un tableau de
+    // bord qui charge indéfiniment sans jamais expliquer pourquoi.
     console.warn('initAppFirebase error:', e.message);
-    currentUserRole = 'formateur';
-    showToast('⚠️ Impossible de vérifier votre rôle, accès limité par défaut');
+    document.getElementById('waiting-overlay').style.display = 'none';
+    document.getElementById('app-wrapper').style.display = 'none';
+    document.getElementById('auth-overlay').style.display = 'flex';
+    const errEl = document.getElementById('auth-error');
+    if(errEl) errEl.textContent = 'Erreur de connexion : ' + e.message;
+    return;
   }
 
   showApp();
