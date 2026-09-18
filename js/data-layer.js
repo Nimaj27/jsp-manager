@@ -201,10 +201,21 @@ async function initAppFirebase(){
       }
       currentUserRole = data.role || 'aide';
     } else {
-      // Vérifier si la section existe déjà (premier utilisateur = chef)
-      const sectDoc = await getDoc(doc(db, 'sections', SECTION_ID));
-      if(sectDoc.exists()){
-        // Section existe → nouvel utilisateur → en attente de validation
+      // Un utilisateur pas encore approuvé n'a pas le droit de lire
+      // sections/{id} (règles), donc impossible de pré-vérifier ici si la
+      // section existe déjà. On tente directement la création en tant que
+      // premier chef (bootstrap) ; si les règles la refusent (la section
+      // existe déjà), on retombe sur un compte en attente de validation —
+      // c'est la règle Firestore elle-même qui tranche, côté serveur.
+      try {
+        currentUserRole = 'chef';
+        await setDoc(doc(db, 'users', userKey), {
+          email: currentUserEmail,
+          nom: window._fbUser.displayName || currentUserEmail,
+          role: 'chef',
+          createdAt: new Date().toISOString(),
+        });
+      } catch(bootstrapErr){
         currentUserRole = 'pending';
         await setDoc(doc(db, 'users', userKey), {
           email: currentUserEmail,
@@ -214,15 +225,6 @@ async function initAppFirebase(){
         });
         showWaitingScreen();
         return;
-      } else {
-        // Première connexion = premier chef de section
-        currentUserRole = 'chef';
-        await setDoc(doc(db, 'users', userKey), {
-          email: currentUserEmail,
-          nom: window._fbUser.displayName || currentUserEmail,
-          role: 'chef',
-          createdAt: new Date().toISOString(),
-        });
       }
     }
   } catch(e){
