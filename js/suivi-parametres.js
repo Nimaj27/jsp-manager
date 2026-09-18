@@ -619,7 +619,12 @@ async function initNotifications(){
       return;
     }
     const {messaging, getToken} = window._fb;
-    const token = await getToken(messaging, {vapidKey: FCM_VAPID_KEY});
+    // Réutilise notre propre service worker (sw.js, déjà enregistré et qui
+    // gère déjà onBackgroundMessage) au lieu de laisser FCM chercher par
+    // défaut un fichier firebase-messaging-sw.js inexistant dans ce projet
+    // (→ 404 et échec silencieux de l'activation).
+    const swReg = await navigator.serviceWorker.ready;
+    const token = await getToken(messaging, {vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: swReg});
     if(token){
       _fcmToken = token;
       // Sauvegarder le token dans Firestore pour cet utilisateur
