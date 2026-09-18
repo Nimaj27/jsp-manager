@@ -95,15 +95,13 @@ function loadEvals(){
 function saveEvals(ev){ localStorage.setItem(k('evaluations'), JSON.stringify(ev)); }
 function evalKey(jspId, cycle, idx){ return jspId+'|'+cycle+'|'+idx; }
 
-function statutFromNote(note){
-  if(note===null || note===undefined || note==='') return 'NE';
-  const n = parseFloat(note);
-  if(n>=12) return 'A';
-  if(n>=8)  return 'ECA';
-  return 'NA';
+function isCompValide(e){ return !!(e && e.valide===true); }
+function statutFromEval(e){
+  if(!e || e.valide===undefined || e.valide===null) return 'NE';
+  return e.valide ? 'V' : 'NV';
 }
-const STATUT_LABEL = {A:'Acquis', ECA:'En cours', NA:'Non acquis', NE:'Non évalué'};
-const STATUT_COLOR = {A:'var(--ok)', ECA:'var(--warn)', NA:'var(--danger)', NE:'var(--txt-dim)'};
+const STATUT_LABEL = {V:'Validé', NV:'Non validé', NE:'Non évalué'};
+const STATUT_COLOR = {V:'var(--ok)', NV:'var(--danger)', NE:'var(--txt-dim)'};
 
 function renderFormation(){
   const sel = document.getElementById('form-jsp-select');
@@ -127,18 +125,16 @@ function renderFormation(){
   const evals = loadEvals();
   const cyclesToShow = cycleFilter==='all' ? CYCLES : [cycleFilter];
 
-  let totalComp=0, notes=[], nbA=0, nbECA=0, nbNA=0;
+  let totalComp=0, nbV=0, nbNV=0;
   cyclesToShow.forEach(cy=>{
     (ref[cy]||[]).forEach((c,idx)=>{
       totalComp++;
       const e = evals[evalKey(jspId,cy,idx)];
-      const st = statutFromNote(e&&e.note);
-      if(st==='A') nbA++; else if(st==='ECA') nbECA++; else if(st==='NA') nbNA++;
-      if(e && e.note!=='' && e.note!=null) notes.push(parseFloat(e.note));
+      const st = statutFromEval(e);
+      if(st==='V') nbV++; else if(st==='NV') nbNV++;
     });
   });
-  const evalues = nbA+nbECA+nbNA;
-  const moy = notes.length ? (notes.reduce((a,b)=>a+b,0)/notes.length) : null;
+  const evalues = nbV+nbNV;
   const pctEval = totalComp ? Math.round(evalues/totalComp*100) : 0;
 
   let html = ''
@@ -150,39 +146,33 @@ function renderFormation(){
     + '<button class="btn btn-blue btn-sm" onclick="printFiche('+jspId+')">🖨️ Fiche bilan</button></div>'
     + '<div class="kpi-row">'
     + '<div class="kpi"><div class="kpi-v">'+pctEval+'%</div><div class="kpi-l">Évalué</div></div>'
-    + '<div class="kpi"><div class="kpi-v">'+(moy!==null?moy.toFixed(1):'—')+'</div><div class="kpi-l">Moyenne /20</div></div>'
-    + '<div class="kpi"><div class="kpi-v" style="color:var(--ok)">'+nbA+'</div><div class="kpi-l">Acquis</div></div>'
-    + '<div class="kpi"><div class="kpi-v" style="color:var(--warn)">'+nbECA+'</div><div class="kpi-l">En cours</div></div>'
-    + '<div class="kpi"><div class="kpi-v" style="color:var(--danger)">'+nbNA+'</div><div class="kpi-l">Non acquis</div></div></div>';
+    + '<div class="kpi"><div class="kpi-v" style="color:var(--ok)">'+nbV+'</div><div class="kpi-l">Validées</div></div>'
+    + '<div class="kpi"><div class="kpi-v" style="color:var(--danger)">'+nbNV+'</div><div class="kpi-l">Non validées</div></div></div>';
 
   cyclesToShow.forEach(cy=>{
     const comps = ref[cy]||[];
     if(!comps.length) return;
     const byMod = {};
     comps.forEach((c,idx)=>{ (byMod[c.mod]=byMod[c.mod]||[]).push({mod:c.mod,comp:c.comp,idx:idx}); });
-    let cyNotes=[], cyEval=0;
+    let cyValid=0;
     comps.forEach((c,idx)=>{
       const e=evals[evalKey(jspId,cy,idx)];
-      if(e&&e.note!==''&&e.note!=null){ cyNotes.push(parseFloat(e.note)); cyEval++; }
+      if(isCompValide(e)) cyValid++;
     });
-    const cyPct = comps.length?Math.round(cyEval/comps.length*100):0;
-    const cyMoy = cyNotes.length?(cyNotes.reduce((a,b)=>a+b,0)/cyNotes.length).toFixed(1):'—';
+    const cyPct = comps.length?Math.round(cyValid/comps.length*100):0;
     const cyCol = cyPct>=80?'var(--ok)':cyPct>=40?'var(--warn)':'var(--sdis-bleu-clair)';
-    html += '<div class="stats-card"><h3>🎓 '+cy+' <span style="font-weight:400;color:var(--txt-muted);font-size:12px">moy. '+cyMoy+'/20</span>'
-      + '<span style="margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--txt-muted)">'+cyEval+'/'+comps.length
+    html += '<div class="stats-card"><h3>🎓 '+cy+' <span style="font-weight:400;color:var(--txt-muted);font-size:12px">'+cyValid+'/'+comps.length+' validées</span>'
+      + '<span style="margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--txt-muted)">'+cyPct+'%'
       + '<span class="pbar" style="width:70px"><span class="pbar-fill" style="width:'+cyPct+'%;background:'+cyCol+'"></span></span></span></h3>';
     Object.entries(byMod).forEach(([mod,items])=>{
-      html += '<div style="margin:10px 0 4px;font-size:11px;font-weight:700;color:var(--sdis-or);text-transform:uppercase;letter-spacing:.04em">'+mod+'</div>';
+      html += '<div style="margin:10px 0 4px;font-size:11px;font-weight:700;color:var(--sdis-or);text-transform:uppercase;letter-spacing:.04em">'+esc(mod)+'</div>';
       items.forEach(it=>{
         const e = evals[evalKey(jspId,cy,it.idx)];
-        const note = e&&e.note;
-        const st = statutFromNote(note);
+        const st = statutFromEval(e);
         const col = STATUT_COLOR[st];
-        const noteTxt = (note!==''&&note!=null&&note!==undefined) ? note+'/20' : '—';
         html += '<div onclick="openEval('+jspId+',\''+cy+'\','+it.idx+')" style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--card);border-radius:6px;cursor:pointer;border-left:3px solid '+col+';margin-bottom:3px">'
-          + '<span style="flex:1;font-size:13px">'+it.comp+'</span>'
+          + '<span style="flex:1;font-size:13px">'+esc(it.comp)+'</span>'
           + (e&&e.obs?'<span title="'+esc(e.obs)+'" style="font-size:11px;opacity:.6">💬</span>':'')
-          + '<span style="font-weight:700;font-size:13px;color:'+col+';min-width:48px;text-align:right">'+noteTxt+'</span>'
           + '<span class="badge" style="background:'+col+'22;color:'+col+';min-width:74px;text-align:center">'+STATUT_LABEL[st]+'</span></div>';
       });
     });
@@ -192,6 +182,14 @@ function renderFormation(){
 }
 
 let evalCtx = {jspId:null, cycle:null, idx:null};
+function setEvalValide(val){
+  document.getElementById('eval-valide').value = (val===null?'':String(val));
+  const map = {'':'eval-btn-ne', 'false':'eval-btn-nv', 'true':'eval-btn-v'};
+  ['eval-btn-ne','eval-btn-nv','eval-btn-v'].forEach(function(id){
+    document.getElementById(id).classList.remove('btn-primary');
+  });
+  document.getElementById(map[val===null?'':String(val)]).classList.add('btn-primary');
+}
 function openEval(jspId, cycle, idx){
   evalCtx = {jspId:jspId, cycle:cycle, idx:idx};
   const ref = loadRef();
@@ -200,32 +198,24 @@ function openEval(jspId, cycle, idx){
   const e = evals[evalKey(jspId,cycle,idx)] || {};
   document.getElementById('eval-title').textContent = cycle+' · '+comp.mod;
   document.getElementById('eval-comp-label').textContent = comp.comp;
-  document.getElementById('eval-note').value = (e.note!=null?e.note:'');
+  setEvalValide(e.valide===true ? true : e.valide===false ? false : null);
   document.getElementById('eval-date').value = e.date || new Date().toISOString().slice(0,10);
   document.getElementById('eval-obs').value = e.obs || '';
-  document.getElementById('eval-clear').style.display = (e.note!=null&&e.note!=='') ? 'inline-flex' : 'none';
   document.getElementById('modal-eval').classList.add('open');
-  setTimeout(function(){document.getElementById('eval-note').focus();},50);
 }
 function saveEval(){
-  const noteRaw = document.getElementById('eval-note').value.trim();
-  if(noteRaw!==''){
-    const n = parseFloat(noteRaw);
-    if(isNaN(n)||n<0||n>20){ showToast('⚠️ Note entre 0 et 20'); return; }
-  }
+  const valRaw = document.getElementById('eval-valide').value;
   const evals = loadEvals();
   const key = evalKey(evalCtx.jspId, evalCtx.cycle, evalCtx.idx);
-  evals[key] = {
-    note: noteRaw==='' ? '' : parseFloat(noteRaw),
-    date: document.getElementById('eval-date').value,
-    obs: document.getElementById('eval-obs').value.trim()
-  };
-  saveEvals(evals); showSaveInd();
-  closeModal('modal-eval'); renderFormation();
-}
-function clearEval(){
-  const evals = loadEvals();
-  delete evals[evalKey(evalCtx.jspId, evalCtx.cycle, evalCtx.idx)];
+  if(valRaw===''){
+    delete evals[key];
+  } else {
+    evals[key] = {
+      valide: valRaw==='true',
+      date: document.getElementById('eval-date').value,
+      obs: document.getElementById('eval-obs').value.trim()
+    };
+  }
   saveEvals(evals); showSaveInd();
   closeModal('modal-eval'); renderFormation();
 }
@@ -400,29 +390,24 @@ function printFiche(jspId){
   CYCLES.forEach(function(cy){
     var comps = ref[cy]||[];
     if(!comps.length) return;
-    var notes = [];
+    var validated = 0;
     var rows = comps.map(function(c,idx){
       var e = evals[evalKey(jspId,cy,idx)];
-      var note = e&&e.note;
-      var st = statutFromNote(note);
-      if(note!==''&&note!=null) notes.push(parseFloat(note));
-      var colors = {A:'#16a34a',ECA:'#d97706',NA:'#dc2626',NE:'#aaa'};
-      return '<tr><td style="font-size:9px;color:#666;width:120px">'+c.mod+'</td>'
-        +'<td>'+c.comp+'</td>'
-        +'<td style="text-align:center;width:50px;font-weight:700">'+((note!==''&&note!=null)?note+'/20':'—')+'</td>'
+      var st = statutFromEval(e);
+      if(st==='V') validated++;
+      var colors = {V:'#16a34a',NV:'#dc2626',NE:'#aaa'};
+      return '<tr><td style="font-size:9px;color:#666;width:120px">'+esc(c.mod)+'</td>'
+        +'<td>'+esc(c.comp)+'</td>'
         +'<td style="text-align:center;width:80px;color:'+colors[st]+';font-weight:600">'+STATUT_LABEL[st]+'</td></tr>';
     }).join('');
-    var moy = notes.length?(notes.reduce(function(a,b){return a+b;},0)/notes.length).toFixed(1):'—';
-    var validated = notes.filter(function(n){return n>=10;}).length;
     var pct = comps.length ? Math.round(validated/comps.length*100) : 0;
     formSection += '<h3 style="background:#003087;color:#fff;padding:6px 10px;margin:16px 0 0;font-size:13px;border-radius:4px;display:flex;justify-content:space-between">'
       +'<span>Cycle '+cy+'</span>'
-      +'<span>Moy. '+moy+'/20 \u2014 '+pct+'% valid\u00e9es</span></h3>'
+      +'<span>'+validated+'/'+comps.length+' \u2014 '+pct+'% valid\u00e9es</span></h3>'
       +'<table style="width:100%;border-collapse:collapse;font-size:11px">'
       +'<thead><tr style="border-bottom:2px solid #003087">'
       +'<th style="text-align:left;padding:4px">Module</th>'
       +'<th style="text-align:left;padding:4px">Comp\u00e9tence</th>'
-      +'<th style="padding:4px">Note</th>'
       +'<th style="padding:4px">Statut</th></tr></thead>'
       +'<tbody>'+rows+'</tbody></table>';
   });
@@ -431,7 +416,7 @@ function printFiche(jspId){
   var allComps = CYCLES.reduce(function(acc,cy){return acc+(ref[cy]||[]).length;},0);
   var allValid = CYCLES.reduce(function(acc,cy){
     return acc+(ref[cy]||[]).filter(function(c,idx){
-      var e=evals[evalKey(jspId,cy,idx)]; return e&&parseFloat(e.note)>=10;
+      var e=evals[evalKey(jspId,cy,idx)]; return isCompValide(e);
     }).length;
   },0);
   var progPct = allComps ? Math.round(allValid/allComps*100) : 0;

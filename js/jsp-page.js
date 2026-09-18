@@ -233,7 +233,7 @@ function renderAccueil(){
   var ref = loadRef(); var evals = loadEvals();
   var allComps = CYCLES.reduce(function(acc,cy){return acc+(ref[cy]||[]).length;},0);
   var formArr = allComps ? actifs.map(function(j){
-    var v=CYCLES.reduce(function(a2,cy){return a2+(ref[cy]||[]).filter(function(c2,idx){var e=evals[evalKey(j.id,cy,idx)];return e&&parseFloat(e.note)>=10;}).length;},0);
+    var v=CYCLES.reduce(function(a2,cy){return a2+(ref[cy]||[]).filter(function(c2,idx){var e=evals[evalKey(j.id,cy,idx)];return isCompValide(e);}).length;},0);
     return Math.round(v/allComps*100);
   }) : [];
   var moyForm = formArr.length ? Math.round(formArr.reduce(function(a,b){return a+b;},0)/formArr.length) : 0;

@@ -389,7 +389,7 @@ function openTimeline(jspId){
   var ref = loadRef(); var evals = loadEvals();
   var allComps = CYCLES.reduce(function(acc,cy){return acc+(ref[cy]||[]).length;},0);
   var valComps = CYCLES.reduce(function(acc,cy){
-    return acc+(ref[cy]||[]).filter(function(c,idx){var e=evals[evalKey(jspId,cy,idx)];return e&&parseFloat(e.note)>=10;}).length;
+    return acc+(ref[cy]||[]).filter(function(c,idx){var e=evals[evalKey(jspId,cy,idx)];return isCompValide(e);}).length;
   },0);
   var progPct = allComps?Math.round(valComps/allComps*100):0;
   loadNotesMan();

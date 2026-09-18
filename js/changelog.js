@@ -6,6 +6,9 @@
 const APP_VERSION = 'v5.3';
 
 const CHANGELOG = [
+  { date:'2026-09-18', items:[
+    'Formation : les compétences sont désormais évaluées en "Validé / Non validé" plutôt qu\'avec une note sur 20.',
+  ]},
   { date:'2026-09-14', items:[
     'Correction d\'un message d\'erreur sans conséquence affiché au chargement.',
   ]},

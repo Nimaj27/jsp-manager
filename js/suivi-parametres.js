@@ -90,7 +90,7 @@ function exportBilanAnnuel(){
     var nbConc = saisons_c.length;
     var allComps = CYCLES.reduce(function(acc,cy){return acc+(ref[cy]||[]).length;},0);
     var moyForm = nbActifs && allComps ? Math.round(actifs.reduce(function(acc,j){
-      var v=CYCLES.reduce(function(a2,cy){return a2+(ref[cy]||[]).filter(function(c,idx){var e=evals[evalKey(j.id,cy,idx)];return e&&parseFloat(e.note)>=10;}).length;},0);
+      var v=CYCLES.reduce(function(a2,cy){return a2+(ref[cy]||[]).filter(function(c,idx){var e=evals[evalKey(j.id,cy,idx)];return isCompValide(e);}).length;},0);
       return acc+Math.round(v/allComps*100);
     },0)/nbActifs) : 0;
 
@@ -199,7 +199,7 @@ function exportBilanAnnuel(){
       // Formation
       var allCompsJ=CYCLES.reduce(function(acc,cy){return acc+(ref[cy]||[]).length;},0);
       var valJ=CYCLES.reduce(function(acc,cy){
-        return acc+(ref[cy]||[]).filter(function(c2,idx){var e=evals[evalKey(j.id,cy,idx)];return e&&parseFloat(e.note)>=10;}).length;
+        return acc+(ref[cy]||[]).filter(function(c2,idx){var e=evals[evalKey(j.id,cy,idx)];return isCompValide(e);}).length;
       },0);
       var progJ = allCompsJ?Math.round(valJ/allCompsJ*100):0;
       // Concours JSP
@@ -235,17 +235,16 @@ function exportBilanAnnuel(){
       if(incForm){
         CYCLES.forEach(function(cy){
           var comps=ref[cy]||[]; if(!comps.length) return;
-          var notes2=[]; var rows2=comps.map(function(c2,idx){
-            var e=evals[evalKey(j.id,cy,idx)]; var note=e&&e.note; var st=statutFromNote(note);
-            if(note!==''&&note!=null) notes2.push(parseFloat(note));
-            var colors2={A:'#16a34a',ECA:'#d97706',NA:'#dc2626',NE:'#aaa'};
-            return '<tr><td style="font-size:8px;color:#888;width:110px">'+c2.mod+'</td><td>'+c2.comp+'</td>'
-              +'<td style="text-align:center;width:45px;font-weight:700">'+((note!==''&&note!=null)?note+'/20':'—')+'</td>'
+          var validated2=0; var rows2=comps.map(function(c2,idx){
+            var e=evals[evalKey(j.id,cy,idx)]; var st=statutFromEval(e);
+            if(st==='V') validated2++;
+            var colors2={V:'#16a34a',NV:'#dc2626',NE:'#aaa'};
+            return '<tr><td style="font-size:8px;color:#888;width:110px">'+esc(c2.mod)+'</td><td>'+esc(c2.comp)+'</td>'
               +'<td style="text-align:center;width:70px;color:'+colors2[st]+';font-weight:600">'+STATUT_LABEL[st]+'</td></tr>';
           }).join('');
-          var moy2=notes2.length?(notes2.reduce(function(a,b){return a+b;},0)/notes2.length).toFixed(1):'—';
-          html+='<div class="section-title">🎓 Cycle '+cy+' — Moy. '+moy2+'/20</div>'
-            +'<table><thead><tr><th>Module</th><th>Compétence</th><th>Note</th><th>Statut</th></tr></thead>'
+          var pct2=comps.length?Math.round(validated2/comps.length*100):0;
+          html+='<div class="section-title">🎓 Cycle '+cy+' — '+validated2+'/'+comps.length+' validées ('+pct2+'%)</div>'
+            +'<table><thead><tr><th>Module</th><th>Compétence</th><th>Statut</th></tr></thead>'
             +'<tbody>'+rows2+'</tbody></table>';
         });
       }
@@ -292,7 +291,7 @@ function calcScoreAutoJsp(jspId, saison){
   var allComps = CYCLES.reduce(function(acc,cy){return acc+(ref[cy]||[]).length;},0);
   var valComps = CYCLES.reduce(function(acc,cy){
     return acc+(ref[cy]||[]).filter(function(c,idx){
-      var e=evals[evalKey(jspId,cy,idx)]; return e&&parseFloat(e.note)>=10;
+      var e=evals[evalKey(jspId,cy,idx)]; return isCompValide(e);
     }).length;
   },0);
   var scoreForm = allComps ? Math.round(valComps/allComps*100) : 0;
