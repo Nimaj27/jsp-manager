@@ -9,7 +9,11 @@
 
     const firebaseConfig = {
       apiKey: "AIzaSyDSSMGVAQ2ygh2KjPVwePxBnq8_oO6Bzik",
-      authDomain: "base-jsp-pacy.firebaseapp.com",
+      // authDomain pointé sur le domaine d'hébergement de l'appli (et non le
+      // firebaseapp.com par défaut) : Safari iOS bloque le stockage cross-site
+      // nécessaire à signInWithRedirect quand ces deux domaines diffèrent,
+      // ce qui fait "boucler" silencieusement sur l'écran de connexion.
+      authDomain: "jsp-manager.web.app",
       projectId: "base-jsp-pacy",
       storageBucket: "base-jsp-pacy.firebasestorage.app",
       messagingSenderId: "457252011375",
