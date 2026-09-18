@@ -177,11 +177,19 @@ async function initAppFirebase(){
   try {
     let userDoc = await getDoc(doc(db, 'users', userKey));
     if(!userDoc.exists() && legacyUserKey !== userKey){
-      // Migration transparente depuis l'ancien format de clé (email transformé)
-      const legacyDoc = await getDoc(doc(db, 'users', legacyUserKey));
-      if(legacyDoc.exists()){
-        await setDoc(doc(db, 'users', userKey), legacyDoc.data());
-        userDoc = await getDoc(doc(db, 'users', userKey));
+      // Migration transparente depuis l'ancien format de clé (email transformé).
+      // Best-effort : les règles de sécurité interdisent structurellement cette
+      // lecture/écriture tant que le compte n'est pas déjà reconnu (poule et
+      // l'œuf), donc un refus ici ne doit jamais faire échouer toute la
+      // connexion — on retombe simplement sur le flux normal (nouveau compte).
+      try {
+        const legacyDoc = await getDoc(doc(db, 'users', legacyUserKey));
+        if(legacyDoc.exists()){
+          await setDoc(doc(db, 'users', userKey), legacyDoc.data());
+          userDoc = await getDoc(doc(db, 'users', userKey));
+        }
+      } catch(migrationErr){
+        console.warn('Migration ancienne clé utilisateur ignorée:', migrationErr.message);
       }
     }
     if(userDoc.exists()){
@@ -220,6 +228,7 @@ async function initAppFirebase(){
   } catch(e){
     console.warn('initAppFirebase error:', e.message);
     currentUserRole = 'formateur';
+    showToast('⚠️ Impossible de vérifier votre rôle, accès limité par défaut');
   }
 
   showApp();
