@@ -36,6 +36,16 @@
                    GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut,
                    messaging, getToken, onMessage };
 
+    // Poursuite automatique de la connexion : depuis le mode PWA installé,
+    // loginGoogle() (header-actions.js) ouvre ce même lien dans un onglet de
+    // navigateur classique avec ?login=1 (Google bloque l'auth en mode
+    // standalone). Sans ça, l'onglet s'ouvrait sur l'écran de connexion sans
+    // rien déclencher, laissant l'utilisateur croire que ça ne marche pas.
+    if(new URLSearchParams(window.location.search).get('login') === '1'){
+      history.replaceState(null, '', window.location.pathname);
+      if(typeof loginGoogle === 'function') loginGoogle();
+    }
+
     // Écouter les messages FCM quand l'appli est au premier plan
     if(messaging){
       onMessage(messaging, function(payload){
