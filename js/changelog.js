@@ -6,6 +6,10 @@
 const APP_VERSION = 'v5.3';
 
 const CHANGELOG = [
+  { date:'2026-09-20', items:[
+    'Nouveau : onglet Cours pour partager des supports de cours (liens) par cycle.',
+    'Nouveau : page publique cours_public.html pour les jeunes, avec accès par code PIN individuel (défini dans la fiche du JSP).',
+  ]},
   { date:'2026-09-18', items:[
     'Formation : les compétences sont désormais évaluées en "Validé / Non validé" plutôt qu\'avec une note sur 20.',
   ]},

@@ -151,6 +151,7 @@
   <div class="tab" data-tab="concours" onclick="showTab('concours')">🏆 Concours</div>
   <div class="tab" data-tab="manoeuvre" onclick="showTab('manoeuvre')">📝 Séquenceur</div>
   <div class="tab" data-tab="formation" onclick="showTab('formation')">🎓 Formation</div>
+  <div class="tab" data-tab="cours" onclick="showTab('cours')">📚 Cours</div>
   <div class="tab" data-tab="suivi" onclick="showTab('suivi')">📊 Suivi</div>
 </div>
 
@@ -717,6 +718,50 @@
   <div id="formation-content"></div>
 </div>
 
+<!-- ══════════ PAGE COURS ══════════ -->
+<div class="page" id="page-cours">
+  <div class="page-head">
+    <h2>📚 Supports de cours</h2>
+    <select class="filter-sel" id="cours-cycle-select" onchange="renderCours()">
+      <option value="all">Tous les cycles</option>
+      <option value="JSP1">Cycle JSP1</option>
+      <option value="JSP2">Cycle JSP2</option>
+      <option value="JSP3">Cycle JSP3</option>
+      <option value="JSP4">Cycle JSP4</option>
+    </select>
+    <button class="btn btn-primary btn-sm" id="cours-add-btn" onclick="openCoursModal()">+ Ajouter un cours</button>
+    <button class="btn btn-ghost btn-sm" onclick="openCoursPublicInfo()">🔗 Page publique jeunes</button>
+  </div>
+  <div id="cours-content"></div>
+</div>
+
+<!-- ══════════ MODAL COURS ══════════ -->
+<div class="modal-bg" id="modal-cours">
+  <div class="modal" style="max-width:460px">
+    <h2 id="modal-cours-title">Ajouter un cours</h2>
+    <input type="hidden" id="c-id">
+    <div class="field"><label>Titre *</label><input type="text" id="c-titre" placeholder="Ex: Les classes de feux"></div>
+    <div class="field"><label>Cycle concerné</label>
+      <select id="c-cycle">
+        <option value="Tous">Tous cycles</option>
+        <option value="JSP1">JSP1</option>
+        <option value="JSP2">JSP2</option>
+        <option value="JSP3">JSP3</option>
+        <option value="JSP4">JSP4</option>
+      </select>
+    </div>
+    <div class="field"><label>Lien (Google Drive, PDF, etc.) *</label><input type="url" id="c-lien" placeholder="https://drive.google.com/…"></div>
+    <div class="field"><label>Description</label><textarea id="c-desc" rows="2" placeholder="Contexte, résumé…"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="c-delete" onclick="deleteCours()" style="display:none">🗑️ Supprimer</button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button class="btn btn-ghost" onclick="closeModal('modal-cours')">Annuler</button>
+        <button class="btn btn-primary" onclick="saveCours()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════ PAGE SUIVI ══════════ -->
 <div class="page" id="page-suivi">
   <div class="page-head">
@@ -891,6 +936,13 @@
     <div class="field">
       <label>🏥 Certificat médical valide jusqu'au</label>
       <input type="date" id="j-certif-med" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--txt);padding:6px 10px;font-size:13px;outline:none;width:100%">
+    </div>
+    <div class="field">
+      <label>🔑 Code PIN accès Cours (page publique jeunes)</label>
+      <div style="display:flex;gap:6px">
+        <input type="text" id="j-pin" maxlength="4" inputmode="numeric" placeholder="ex: 4821" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--txt);padding:6px 10px;font-size:13px;outline:none;flex:1">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="regenPinJSP()">🎲 Régénérer</button>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-danger" id="j-delete" onclick="deleteJSP()" style="display:none">🗑️ Supprimer</button>
@@ -1129,6 +1181,7 @@
 <script src="js/sport-challenge-suivi.js"></script>
 <script src="js/concours.js"></script>
 <script src="js/formation.js"></script>
+<script src="js/cours.js"></script>
 
 <script src="js/sequenceur.js"></script>
 <script src="js/suivi-parametres.js"></script>

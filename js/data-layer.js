@@ -23,6 +23,7 @@ let JSPs     = [];
 let seances  = [];
 let sports   = [];
 let concours = [];
+let cours    = [];
 let _presenceDocsCache = []; // derniers docs de sections/{id}/presences reçus
 
 // ── Cache localStorage (fallback hors-ligne) ────────────────
@@ -32,6 +33,7 @@ function saveCache(){
   localStorage.setItem(k('sports'),   JSON.stringify(sports));
   localStorage.setItem(k('concours'), JSON.stringify(concours));
   localStorage.setItem(k('notesman'), JSON.stringify(notesMan));
+  localStorage.setItem(k('cours'),    JSON.stringify(cours));
 }
 function loadFromCache(){
   JSPs     = JSON.parse(localStorage.getItem(k('jsps'))     || '[]');
@@ -39,6 +41,7 @@ function loadFromCache(){
   sports   = JSON.parse(localStorage.getItem(k('sports'))   || '[]');
   concours = JSON.parse(localStorage.getItem(k('concours')) || '[]');
   notesMan = JSON.parse(localStorage.getItem(k('notesman')) || '[]');
+  cours    = JSON.parse(localStorage.getItem(k('cours'))    || '[]');
 }
 function loadData(){ loadFromCache(); }
 
@@ -55,6 +58,7 @@ async function save(){
       sports:    sports,
       concours:  concours,
       notesman:  notesMan,
+      cours:     cours,
       seqPlanif:  (typeof seqPlanif  !== 'undefined' ? seqPlanif  : []),
       seqModeles: (typeof seqModeles !== 'undefined' ? seqModeles : []),
       referentiel: (typeof loadRef  === 'function' ? loadRef()  : {}),
@@ -62,10 +66,27 @@ async function save(){
       updatedAt: new Date().toISOString(),
       updatedBy: window._fbUser.email,
     });
+    publishPublicCours();
   } catch(e){
     console.warn('Firebase save error:', e.message);
     showToast('⚠️ Sauvegardé localement (sync échouée)');
   }
+}
+
+// ── Miroir public restreint pour cours_public.html ──────────
+// Contient uniquement de quoi afficher les cours et vérifier un PIN
+// (jamais les présences, notes ou coordonnées) : c'est la seule donnée
+// lisible sans authentification.
+async function publishPublicCours(){
+  if(!window._fb || !window._fbUser) return;
+  const {db, doc, setDoc} = window._fb;
+  try {
+    await setDoc(doc(db, 'public_cours', SECTION_ID), {
+      cours: cours,
+      jsps: JSPs.filter(j=>j.statut!=='Licencié').map(j=>({id:j.id, prenom:j.prenom, pin:j.pin||''})),
+      updatedAt: new Date().toISOString(),
+    });
+  } catch(e){ console.warn('Publish cours public error:', e.message); }
 }
 
 // ── Présences de séance (sous-collection séparée) ───────────
@@ -134,6 +155,7 @@ function subscribeFirebase(){
     sports     = d.sports    || [];
     concours   = d.concours  || [];
     notesMan   = d.notesman  || [];
+    cours      = d.cours     || [];
     if(d.seqPlanif)   seqPlanif  = d.seqPlanif;
     if(d.seqModeles)  seqModeles = d.seqModeles;
     if(d.referentiel) saveRef(d.referentiel);
@@ -364,6 +386,7 @@ function showTab(tab){
   if(tab==='concours')  renderConcours();
   if(tab==='manoeuvre') renderSequenceur();
   if(tab==='formation') renderFormation();
+  if(tab==='cours')     renderCours();
   if(tab==='suivi'){    renderSuivi(); showVTab('stats'); }
 }
 
