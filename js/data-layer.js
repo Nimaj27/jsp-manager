@@ -67,6 +67,7 @@ async function save(){
       updatedBy: window._fbUser.email,
     });
     publishPublicCours();
+    publishPublicPlanning();
   } catch(e){
     console.warn('Firebase save error:', e.message);
     showToast('⚠️ Sauvegardé localement (sync échouée)');
@@ -87,6 +88,23 @@ async function publishPublicCours(){
       updatedAt: new Date().toISOString(),
     });
   } catch(e){ console.warn('Publish cours public error:', e.message); }
+}
+
+// ── Miroir public restreint pour jsp_public.html (planning QR code) ─
+// Uniquement les champs affichés (date/thème/lieu/heure/notes), jamais
+// les présences ni les autres données de section.
+async function publishPublicPlanning(){
+  if(!window._fb || !window._fbUser) return;
+  const {db, doc, setDoc} = window._fb;
+  try {
+    await setDoc(doc(db, 'public_planning', SECTION_ID), {
+      seances: seances.map(s => ({
+        date: s.date, theme: s.theme, type: s.type,
+        lieu: s.lieu, heure: s.heure, notes: s.notes,
+      })),
+      updatedAt: new Date().toISOString(),
+    });
+  } catch(e){ console.warn('Publish planning public error:', e.message); }
 }
 
 // ── Présences de séance (sous-collection séparée) ───────────

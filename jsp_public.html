@@ -230,8 +230,9 @@ function render(data) {
   document.getElementById('content').innerHTML = html;
 }
 
-// Écoute temps réel
-onSnapshot(doc(db, 'sections', 'pacy'), snap => {
+// Écoute temps réel — miroir public restreint (jamais le document de
+// section complet, qui nécessite désormais un compte approuvé).
+onSnapshot(doc(db, 'public_planning', 'pacy'), snap => {
   if (snap.exists()) {
     render(snap.data());
   } else {

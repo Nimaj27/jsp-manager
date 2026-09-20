@@ -126,6 +126,15 @@ service cloud.firestore {
       allow write: if canEditSection();
     }
 
+    // ── public_planning/{sectionId} : planning en lecture libre ──────────
+    // Même principe que public_cours ci-dessus, pour jsp_public.html (page
+    // QR code) : seules les séances (date/thème/lieu/heure/notes, jamais les
+    // présences) sont dupliquées ici, jamais le document de section complet.
+    match /public_planning/{sectionId} {
+      allow read: if true;
+      allow write: if canEditSection();
+    }
+
     // Tout le reste est refusé par défaut.
     match /{document=**} {
       allow read, write: if false;
