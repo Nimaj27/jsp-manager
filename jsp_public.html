@@ -79,6 +79,35 @@
       .header-text h1{font-size:15px;}
       .container{padding:14px 12px;}
     }
+
+    /* Onglets */
+    .tabs-public{display:flex;gap:6px;max-width:640px;margin:14px auto 0;padding:0 16px;}
+    .tab-btn{flex:1;background:var(--panel);border:1px solid var(--border);color:var(--txt-muted);
+      font-size:13px;font-weight:600;padding:10px;border-radius:var(--radius-sm);cursor:pointer;
+      display:flex;align-items:center;justify-content:center;gap:6px;}
+    .tab-btn.active{background:var(--sdis-bleu);color:#fff;border-color:var(--sdis-bleu);}
+
+    /* Écran PIN */
+    .pin-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+      padding:24px 20px;max-width:340px;margin:24px auto;text-align:center;}
+    .pin-card h2{font-size:16px;margin-bottom:14px;color:var(--txt);}
+    .pin-card select, .pin-card input{
+      width:100%;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);
+      color:var(--txt);padding:10px 12px;font-size:15px;outline:none;margin-bottom:10px;}
+    .pin-card input{text-align:center;letter-spacing:.3em;font-size:20px;font-weight:700;}
+    .pin-card button{width:100%;background:var(--sdis-bleu);color:#fff;border:none;border-radius:var(--radius-sm);
+      padding:11px;font-size:14px;font-weight:700;cursor:pointer;}
+    .pin-error{color:var(--danger);font-size:12px;margin-top:8px;min-height:16px;}
+
+    /* Carte cours */
+    .cours-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+      padding:14px 16px;margin-bottom:10px;border-left:4px solid var(--sdis-bleu);}
+    .cours-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;
+      background:rgba(0,48,135,.2);color:var(--sdis-or);margin-bottom:6px;}
+    .cours-titre{font-size:15px;font-weight:600;color:var(--txt);margin-bottom:4px;}
+    .cours-desc{font-size:12px;color:var(--txt-muted);margin-bottom:10px;}
+    .cours-link{display:inline-flex;align-items:center;gap:6px;background:var(--sdis-bleu);color:#fff;
+      text-decoration:none;font-size:13px;font-weight:600;padding:7px 14px;border-radius:var(--radius-sm);}
   </style>
 </head>
 <body>
@@ -92,11 +121,25 @@
   <div class="badge-live">En direct</div>
 </header>
 
+<div class="tabs-public">
+  <button class="tab-btn active" id="tab-btn-planning" onclick="showPublicTab('planning')">📅 Planning</button>
+  <button class="tab-btn" id="tab-btn-cours" onclick="showPublicTab('cours')">📚 Cours</button>
+</div>
 <div class="container">
-  <div id="content">
-    <div class="loading">
-      <div class="spinner"></div>
-      Chargement du planning...
+  <div id="tab-planning">
+    <div id="content">
+      <div class="loading">
+        <div class="spinner"></div>
+        Chargement du planning...
+      </div>
+    </div>
+  </div>
+  <div id="tab-cours" style="display:none">
+    <div id="cours-public-content">
+      <div class="loading">
+        <div class="spinner"></div>
+        Chargement...
+      </div>
     </div>
   </div>
 </div>
@@ -243,6 +286,85 @@ onSnapshot(doc(db, 'public_planning', 'pacy'), snap => {
   document.getElementById('content').innerHTML =
     '<div class="empty"><div class="empty-icon">⚠️</div>Impossible de charger le planning.<br><small>' + err.message + '</small></div>';
 });
+
+// ── Onglet Cours (miroir public restreint public_cours/pacy) ──────────
+let coursPublicData = null; // {cours:[...], jsps:[{id,prenom,pin}]}
+let coursUnlockedJsp = null;
+const coursContent = document.getElementById('cours-public-content');
+
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+}
+
+function renderCoursPinScreen(){
+  const jsps = (coursPublicData.jsps||[]).slice().sort((a,b)=>a.prenom.localeCompare(b.prenom));
+  coursContent.innerHTML = `
+    <div class="pin-card">
+      <h2>🔑 Accès aux cours</h2>
+      <select id="pin-jsp">
+        <option value="">— Choisis ton prénom —</option>
+        ${jsps.map(j => `<option value="${esc(j.id)}">${esc(j.prenom)}</option>`).join('')}
+      </select>
+      <input type="text" id="pin-code" maxlength="4" inputmode="numeric" placeholder="Code PIN">
+      <button id="pin-submit">Voir les cours</button>
+      <div class="pin-error" id="pin-error"></div>
+    </div>`;
+  document.getElementById('pin-submit').onclick = () => {
+    const jspId = document.getElementById('pin-jsp').value;
+    const code = document.getElementById('pin-code').value.trim();
+    const err = document.getElementById('pin-error');
+    if(!jspId){ err.textContent = 'Choisis ton prénom'; return; }
+    const j = (coursPublicData.jsps||[]).find(x => String(x.id) === jspId);
+    if(!j || !j.pin || j.pin !== code){ err.textContent = 'Code incorrect'; return; }
+    coursUnlockedJsp = j;
+    renderCoursList();
+  };
+}
+
+function renderCoursList(){
+  const list = (coursPublicData.cours||[]).slice()
+    .sort((a,b) => (a.titre||'').localeCompare(b.titre||''));
+
+  if(!list.length){
+    coursContent.innerHTML = '<div class="empty"><div class="empty-icon">📚</div>Aucun support de cours disponible pour le moment.</div>';
+    return;
+  }
+
+  let html = `<div class="section-title">Bonjour ${esc(coursUnlockedJsp.prenom)} 👋</div>`;
+  html += list.map(c => `
+    <div class="cours-card">
+      <span class="cours-badge">${esc(c.cycle||'Tous')}</span>
+      <div class="cours-titre">${esc(c.titre)}</div>
+      ${c.desc ? `<div class="cours-desc">${esc(c.desc)}</div>` : ''}
+      <a class="cours-link" href="${esc(c.lien)}" target="_blank" rel="noopener">🔗 Ouvrir le support</a>
+    </div>`).join('');
+  coursContent.innerHTML = html;
+}
+
+onSnapshot(doc(db, 'public_cours', 'pacy'), snap => {
+  if(!snap.exists()){
+    coursContent.innerHTML = '<div class="empty"><div class="empty-icon">📚</div>Aucun cours publié pour le moment.</div>';
+    return;
+  }
+  coursPublicData = snap.data();
+  if(coursUnlockedJsp) renderCoursList();
+  else renderCoursPinScreen();
+}, err => {
+  coursContent.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>Impossible de charger les cours.<br><small>' + err.message + '</small></div>';
+});
+
+// ── Bascule d'onglet (planning / cours) ────────────────────────────────
+window.showPublicTab = function(tab){
+  document.getElementById('tab-planning').style.display = tab==='planning' ? '' : 'none';
+  document.getElementById('tab-cours').style.display = tab==='cours' ? '' : 'none';
+  document.getElementById('tab-btn-planning').classList.toggle('active', tab==='planning');
+  document.getElementById('tab-btn-cours').classList.toggle('active', tab==='cours');
+};
+
+// Lien direct vers l'onglet Cours (utilisé par cours_public.html en redirection)
+const urlTab = new URLSearchParams(window.location.search).get('tab');
+if(urlTab === 'cours') showPublicTab('cours');
 </script>
 </body>
 </html>

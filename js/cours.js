@@ -1,6 +1,7 @@
 // ════════════════════════════════════════════════════════════
 //  MODULE COURS — Supports de cours (liens externes, lecture seule
-//  aussi accessible aux jeunes via cours_public.html + code PIN)
+//  aussi accessible aux jeunes via l'onglet Cours de jsp_public.html
+//  (?tab=cours) + code PIN)
 // ════════════════════════════════════════════════════════════
 
 function renderCours(){
@@ -82,6 +83,6 @@ function deleteCours(){
 }
 
 function openCoursPublicInfo(){
-  const url = window.location.href.replace(/[^/]*$/, '') + 'cours_public.html';
-  showToast('🔗 Page jeunes : '+url);
+  const url = window.location.href.replace(/[^/]*$/, '') + 'jsp_public.html?tab=cours';
+  showToast('🔗 Page jeunes (même lien que le QR code planning) : '+url);
 }

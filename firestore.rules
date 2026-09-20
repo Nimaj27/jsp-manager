@@ -118,9 +118,10 @@ service cloud.firestore {
     // ── public_cours/{sectionId} : supports de cours en lecture libre ───
     // Miroir volontairement restreint (uniquement cours + {id,prenom,pin}
     // par JSP, jamais les données de section complètes) pour la page
-    // publique cours_public.html, consultée par les jeunes sans compte via
-    // un code PIN. Le PIN n'est pas une vraie sécurité (donnée non
-    // confidentielle) : il sert à personnaliser/filtrer l'accès.
+    // l'onglet Cours de jsp_public.html (?tab=cours), consulté par les
+    // jeunes sans compte via un code PIN. Le PIN n'est pas une vraie
+    // sécurité (donnée non confidentielle) : il sert à personnaliser/
+    // filtrer l'accès.
     match /public_cours/{sectionId} {
       allow read: if true;
       allow write: if canEditSection();

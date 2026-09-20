@@ -74,7 +74,7 @@ async function save(){
   }
 }
 
-// ── Miroir public restreint pour cours_public.html ──────────
+// ── Miroir public restreint pour l'onglet Cours de jsp_public.html ─
 // Contient uniquement de quoi afficher les cours et vérifier un PIN
 // (jamais les présences, notes ou coordonnées) : c'est la seule donnée
 // lisible sans authentification.
