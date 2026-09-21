@@ -181,10 +181,6 @@ const VACANCES = [
   {label:'Printemps 2027', debut:'2027-04-17', fin:'2027-05-03'},
 ];
 
-function isVacances(dateStr) {
-  return VACANCES.find(v => dateStr >= v.debut && dateStr <= v.fin);
-}
-
 function formatDate(dateStr) {
   const d = new Date(dateStr);
   return d.toLocaleDateString('fr-FR', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
@@ -201,8 +197,7 @@ function render(data) {
 
   const seances = (data.seances || [])
     .filter(s => s.date >= today)
-    .sort((a,b) => a.date.localeCompare(b.date))
-    .slice(0, 12);
+    .sort((a,b) => a.date.localeCompare(b.date));
 
   let html = '';
 
@@ -212,7 +207,7 @@ function render(data) {
     return;
   }
 
-  // Prochain RDV en tête
+  // Seule la prochaine séance est affichée (sur demande)
   const next = seances[0];
   const isToday = next.date === today;
   const isTomorrow = next.date === tomorrow;
@@ -232,42 +227,15 @@ function render(data) {
     </div>
   </div>`;
 
-  // Séances suivantes
-  const suivantes = seances.slice(1);
-  if (suivantes.length) {
-    html += '<div class="section-title">📅 Séances à venir</div>';
-
-    let currentMonth = '';
-    suivantes.forEach(s => {
-      const month = new Date(s.date).toLocaleDateString('fr-FR', {month:'long', year:'numeric'});
-      if (month !== currentMonth) {
-        currentMonth = month;
-        html += `<div style="font-size:11px;color:var(--txt-muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px;">${month}</div>`;
-      }
-
-      // Vérifier vacances
-      const vac = isVacances(s.date);
-
-      html += `<div class="seance-card">
-        <div class="seance-date">${cap(new Date(s.date).toLocaleDateString('fr-FR', {weekday:'long', day:'2-digit', month:'long'}))}</div>
-        <div class="seance-theme">${s.theme || s.type || 'Séance JSP'}</div>
-        <div class="seance-meta">
-          ${s.heure ? `<span>🕐 ${s.heure}</span>` : '<span>🕐 13h30</span>'}
-          ${s.notes ? `<span>📝 ${s.notes}</span>` : ''}
-        </div>
-      </div>`;
+  // Prochaines vacances (info indépendante, toujours affichée)
+  const prochainesVac = VACANCES.filter(v => v.debut >= today).slice(0, 2);
+  if (prochainesVac.length) {
+    html += '<div class="section-title">🏖️ Vacances scolaires</div>';
+    prochainesVac.forEach(v => {
+      const deb = new Date(v.debut).toLocaleDateString('fr-FR', {day:'2-digit', month:'long'});
+      const fin = new Date(v.fin).toLocaleDateString('fr-FR', {day:'2-digit', month:'long'});
+      html += `<div class="vacances-card">🏖️ <strong>${v.label}</strong> — du ${deb} au ${fin}</div>`;
     });
-
-    // Prochaines vacances
-    const prochainesVac = VACANCES.filter(v => v.debut >= today).slice(0, 2);
-    if (prochainesVac.length) {
-      html += '<div class="section-title">🏖️ Vacances scolaires</div>';
-      prochainesVac.forEach(v => {
-        const deb = new Date(v.debut).toLocaleDateString('fr-FR', {day:'2-digit', month:'long'});
-        const fin = new Date(v.fin).toLocaleDateString('fr-FR', {day:'2-digit', month:'long'});
-        html += `<div class="vacances-card">🏖️ <strong>${v.label}</strong> — du ${deb} au ${fin}</div>`;
-      });
-    }
   }
 
   document.getElementById('content').innerHTML = html;
