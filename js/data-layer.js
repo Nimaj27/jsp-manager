@@ -98,9 +98,13 @@ async function publishPublicPlanning(){
   const {db, doc, setDoc} = window._fb;
   try {
     await setDoc(doc(db, 'public_planning', SECTION_ID), {
+      // Firestore refuse les valeurs undefined (setDoc échoue silencieusement,
+      // seulement visible en console) : lieu/heure n'existent même pas dans
+      // le formulaire de séance, donc toujours undefined — on les remplace
+      // par '' pour que l'écriture réussisse à coup sûr.
       seances: seances.map(s => ({
-        date: s.date, theme: s.theme, type: s.type,
-        lieu: s.lieu, heure: s.heure, notes: s.notes,
+        date: s.date || '', theme: s.theme || '', type: s.type || '',
+        lieu: s.lieu || '', heure: s.heure || '', notes: s.notes || '',
       })),
       updatedAt: new Date().toISOString(),
     });
