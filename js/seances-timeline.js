@@ -143,7 +143,7 @@ function renderSeances(){
   const fSaison = document.getElementById('seance-filter-saison').value;
   const fType = document.getElementById('seance-filter-type').value;
   let list = seances.filter(s=>(!fSaison||s.saison===fSaison)&&(!fType||s.type===fType));
-  const sortDir = (document.getElementById('seance-sort')||{value:'desc'}).value;
+  const sortDir = (document.getElementById('seance-sort')||{value:'asc'}).value;
   list.sort((a,b)=>sortDir==='asc'?a.date.localeCompare(b.date):b.date.localeCompare(a.date));
 
   const totSeances = list.length;

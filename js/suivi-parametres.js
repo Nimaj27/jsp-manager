@@ -771,17 +771,21 @@ function loadTheme(){
   document.documentElement.setAttribute('data-theme', t);
   document.getElementById('theme-btn').textContent = t==='dark'?'🌙':'☀️';
 }
+// Backup/restauration complète des données de la section. Remplace une
+// ancienne version qui lisait un format localStorage abandonné depuis le
+// passage à Firebase (jsp_s{id}_...) : l'export produisait un fichier
+// vide sans que personne ne s'en aperçoive.
 function exportData(){
-  const data = { sections, current:currentSectionId, data:{} };
-  sections.forEach(s=>{
-    data.data[s.id] = {
-      jsps: JSON.parse(localStorage.getItem(`jsp_s${s.id}_jsps`)||'[]'),
-      seances: JSON.parse(localStorage.getItem(`jsp_s${s.id}_seances`)||'[]'),
-      sports: JSON.parse(localStorage.getItem(`jsp_s${s.id}_sports`)||'[]'),
-      concours: JSON.parse(localStorage.getItem(`jsp_s${s.id}_concours`)||'[]')
-    };
-  });
-  data.club = localStorage.getItem('jsp_club_name')||'';
+  const data = {
+    club: localStorage.getItem('jsp_club_name')||'',
+    jsps: JSPs, seances: seances, sports: sports, concours: concours,
+    notesman: notesMan, cours: cours,
+    seqPlanif: (typeof seqPlanif!=='undefined'?seqPlanif:[]),
+    seqModeles: (typeof seqModeles!=='undefined'?seqModeles:[]),
+    referentiel: (typeof loadRef==='function'?loadRef():{}),
+    evaluations: (typeof loadEvals==='function'?loadEvals():{}),
+    exportedAt: new Date().toISOString(),
+  };
   downloadFile('jsp_manager_backup_'+new Date().toISOString().slice(0,10)+'.json', JSON.stringify(data,null,2));
 }
 function importData(e){
@@ -790,21 +794,20 @@ function importData(e){
   reader.onload = ev=>{
     try{
       const data = JSON.parse(ev.target.result);
-      if(!confirm('Importer ces données ? Cela remplacera les données actuelles.')) return;
-      sections = data.sections;
-      currentSectionId = data.current;
-      Object.entries(data.data).forEach(([sid,d])=>{
-        localStorage.setItem(`jsp_s${sid}_jsps`, JSON.stringify(d.jsps||[]));
-        localStorage.setItem(`jsp_s${sid}_seances`, JSON.stringify(d.seances||[]));
-        localStorage.setItem(`jsp_s${sid}_sports`, JSON.stringify(d.sports||[]));
-        localStorage.setItem(`jsp_s${sid}_concours`, JSON.stringify(d.concours||[]));
-      });
+      if(!confirm('Importer ces données ? Cela remplacera les données actuelles de la section (JSP, séances, sport, concours, formation, cours...).')) return;
+      JSPs = data.jsps||[]; seances = data.seances||[]; sports = data.sports||[];
+      concours = data.concours||[]; notesMan = data.notesman||[]; cours = data.cours||[];
+      if(data.seqPlanif) seqPlanif = data.seqPlanif;
+      if(data.seqModeles) seqModeles = data.seqModeles;
+      if(data.referentiel && typeof saveRef==='function') saveRef(data.referentiel);
+      if(data.evaluations && typeof saveEvals==='function') saveEvals(data.evaluations);
       if(data.club) localStorage.setItem('jsp_club_name', data.club);
-      localStorage.setItem('jsp_sections', JSON.stringify(sections));
-      loadData(); loadClubName(); renderSectionSelect(); renderAll();
+      save();
+      loadClubName(); renderAll();
       closeSettings();
       showToast('✅ Données importées');
     }catch(err){ showToast('❌ Fichier invalide : '+err.message); }
+    e.target.value = '';
   };
   reader.readAsText(file);
 }

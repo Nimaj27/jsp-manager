@@ -231,8 +231,8 @@
       <option>Entraînement</option><option>Manœuvre</option><option>Exercice SDIS</option><option>Sortie</option>
     </select>
     <select class="filter-sel" id="seance-sort" onchange="renderSeances()">
+      <option value="asc" selected>Plus ancienne d'abord</option>
       <option value="desc">Plus récente d'abord</option>
-      <option value="asc">Plus ancienne d'abord</option>
     </select>
   </div>
   <div class="kpi-row" id="seance-kpi"></div>
@@ -731,6 +731,7 @@
     </select>
     <button class="btn btn-primary btn-sm" id="cours-add-btn" onclick="openCoursModal()">+ Ajouter un cours</button>
     <button class="btn btn-ghost btn-sm" onclick="openCoursPublicInfo()">🔗 Page publique jeunes</button>
+    <button class="btn btn-ghost btn-sm" onclick="printPinList()">🖨️ Liste des codes PIN</button>
   </div>
   <div id="cours-content"></div>
 </div>
@@ -1135,7 +1136,7 @@
   </div>
   <div class="set-block">
     <label>Données</label>
-    <p>Sauvegarde locale sur cet appareil. Exporte pour changer de téléphone.</p>
+    <p>Sauvegarde complète de la section (JSP, séances, sport, concours, formation, cours...) en un fichier JSON.</p>
     <div style="display:flex;flex-direction:column;gap:8px">
       <button class="btn btn-blue" onclick="exportData()">↓ Exporter (JSON)</button>
       <button class="btn" onclick="document.getElementById('import-file').click()">↑ Importer (JSON)</button>
