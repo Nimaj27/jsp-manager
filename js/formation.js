@@ -170,15 +170,34 @@ function renderFormation(){
         const e = evals[evalKey(jspId,cy,it.idx)];
         const st = statutFromEval(e);
         const col = STATUT_COLOR[st];
-        html += '<div onclick="openEval('+jspId+',\''+cy+'\','+it.idx+')" style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--card);border-radius:6px;cursor:pointer;border-left:3px solid '+col+';margin-bottom:3px">'
-          + '<span style="flex:1;font-size:13px">'+esc(it.comp)+'</span>'
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--card);border-radius:6px;border-left:3px solid '+col+';margin-bottom:3px">'
+          + '<span onclick="event.stopPropagation();quickToggleEval('+jspId+',\''+cy+'\','+it.idx+')" title="Cliquer pour valider/dévalider rapidement" style="cursor:pointer;font-size:18px;line-height:1;flex-shrink:0">'+(st==='V'?'✅':'⬜')+'</span>'
+          + '<span onclick="openEval('+jspId+',\''+cy+'\','+it.idx+')" style="flex:1;font-size:13px;cursor:pointer">'+esc(it.comp)+'</span>'
           + (e&&e.obs?'<span title="'+esc(e.obs)+'" style="font-size:11px;opacity:.6">💬</span>':'')
-          + '<span class="badge" style="background:'+col+'22;color:'+col+';min-width:74px;text-align:center">'+STATUT_LABEL[st]+'</span></div>';
+          + '<span onclick="openEval('+jspId+',\''+cy+'\','+it.idx+')" class="badge" style="background:'+col+'22;color:'+col+';min-width:74px;text-align:center;cursor:pointer">'+STATUT_LABEL[st]+'</span></div>';
       });
     });
     html += '</div>';
   });
   cont.innerHTML = html;
+}
+
+// Bascule rapide Validé / Non évalué en un clic, sans passer par le modal
+// (garde la date du jour et les observations existantes si il y en a) —
+// pour valider vite un grand nombre de compétences. Le modal reste
+// nécessaire pour marquer explicitement "Non validé" ou ajouter une
+// observation.
+function quickToggleEval(jspId, cycle, idx){
+  const evals = loadEvals();
+  const key = evalKey(jspId, cycle, idx);
+  const e = evals[key];
+  if(e && e.valide===true){
+    delete evals[key];
+  } else {
+    evals[key] = {valide:true, date:new Date().toISOString().slice(0,10), obs:(e&&e.obs)||''};
+  }
+  saveEvals(evals); showSaveInd();
+  renderFormation();
 }
 
 let evalCtx = {jspId:null, cycle:null, idx:null};
