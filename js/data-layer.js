@@ -418,7 +418,12 @@ function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 //  ASSIDUITÉ — calcul présence par JSP
 // ════════════════════════════════════════════════════════════
 function getAssiduite(jspId, saison){
-  let s = saison ? seances.filter(se=>se.saison===saison) : seances;
+  // Seules les séances déjà passées comptent : une séance future planifiée
+  // à l'avance ne doit pas compter comme une absence (personne n'a encore
+  // pu y assister), sinon planifier toute l'année d'un coup fait chuter
+  // artificiellement l'assiduité de tout le monde dès le début de saison.
+  const today = new Date().toISOString().slice(0,10);
+  let s = (saison ? seances.filter(se=>se.saison===saison) : seances).filter(se=>se.date<=today);
   if(!s.length) return null;
   const present = s.filter(se=>(se.presents||[]).includes(jspId)).length;
   return Math.round(present / s.length * 100);
