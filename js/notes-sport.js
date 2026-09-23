@@ -375,11 +375,91 @@ function openSportModal(id=null, defaultEp=null){
   const res = (sp&&sp.resultats)||{};
   const actifs = JSPs.filter(j=>j.statut==='Actif').sort((a,b)=>a.nom.localeCompare(b.nom));
   document.getElementById('sp-results').innerHTML = actifs.length ? actifs.map(j=>`
-    <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border)">
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border)" id="spr-row-${j.id}">
             <span style="flex:1;font-size:13px">${esc(j.nom)} ${esc(j.prenom)}</span>
+      <button type="button" class="btn btn-ghost btn-sm chrono-stop-jsp" id="chrono-stop-${j.id}" onclick="stopChronoForJsp(${j.id})" style="display:none">⏱ Stop</button>
       <input type="number" step="any" id="spr-${j.id}" value="${res[j.id]??''}" placeholder="—" style="width:85px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--txt);padding:5px 8px;font-size:13px;font-weight:700;outline:none">
     </div>`).join('') : '<span style="color:var(--txt-muted);font-size:13px">Aucun JSP actif.</span>';
   document.getElementById('modal-sport').classList.add('open');
+  resetChrono();
+}
+
+// ── Chronomètre partagé pour la saisie des résultats sportifs ──────
+// Démarre un seul chrono visuel ; cliquer sur "Stop" pour un JSP fige
+// son temps écoulé dans son champ résultat, sans arrêter le chrono des
+// autres — utile pour une épreuve chronométrée (course, sprint...).
+let chronoRunning = false;
+let chronoStartTs = null;
+let chronoIntervalId = null;
+let chronoElapsedFrozen = 0;
+
+function toggleChrono(){
+  const panel = document.getElementById('chrono-panel');
+  const showing = panel.style.display !== 'none';
+  panel.style.display = showing ? 'none' : 'block';
+  document.querySelectorAll('.chrono-stop-jsp').forEach(btn=>{
+    btn.style.display = (!showing && chronoRunning) ? 'inline-flex' : 'none';
+  });
+}
+
+function formatChrono(ms){
+  const totalSec = ms/1000;
+  const mm = String(Math.floor(totalSec/60)).padStart(2,'0');
+  const ss = String(Math.floor(totalSec%60)).padStart(2,'0');
+  const dixiemes = Math.floor((totalSec*10)%10);
+  return mm+':'+ss+'.'+dixiemes;
+}
+
+function startChrono(){
+  if(chronoRunning) return;
+  chronoRunning = true;
+  chronoStartTs = Date.now() - (chronoElapsedFrozen||0);
+  document.getElementById('chrono-start-btn').style.display = 'none';
+  document.getElementById('chrono-stop-btn').style.display = 'inline-flex';
+  document.querySelectorAll('.chrono-stop-jsp').forEach(btn=>{
+    if(btn.dataset.done !== '1') btn.style.display = 'inline-flex';
+  });
+  chronoIntervalId = setInterval(()=>{
+    document.getElementById('chrono-display').textContent = formatChrono(Date.now()-chronoStartTs);
+  }, 100);
+}
+
+function stopChronoAll(){
+  chronoRunning = false;
+  chronoElapsedFrozen = Date.now() - chronoStartTs;
+  clearInterval(chronoIntervalId);
+  document.getElementById('chrono-start-btn').style.display = 'inline-flex';
+  document.getElementById('chrono-start-btn').textContent = '▶️ Reprendre';
+  document.getElementById('chrono-stop-btn').style.display = 'none';
+  document.querySelectorAll('.chrono-stop-jsp').forEach(btn=>{ btn.style.display = 'none'; });
+}
+
+function resetChrono(){
+  chronoRunning = false;
+  chronoElapsedFrozen = 0;
+  clearInterval(chronoIntervalId);
+  document.getElementById('chrono-display').textContent = '00:00.0';
+  document.getElementById('chrono-start-btn').style.display = 'inline-flex';
+  document.getElementById('chrono-start-btn').textContent = '▶️ Démarrer';
+  document.getElementById('chrono-stop-btn').style.display = 'none';
+  document.querySelectorAll('.chrono-stop-jsp').forEach(btn=>{
+    btn.style.display = 'none';
+    btn.dataset.done = '';
+    btn.textContent = '⏱ Stop';
+  });
+}
+
+function stopChronoForJsp(jspId){
+  if(!chronoRunning) return;
+  const elapsedSec = Math.round((Date.now()-chronoStartTs)/100)/10; // dixièmes de seconde
+  const input = document.getElementById('spr-'+jspId);
+  if(input) input.value = elapsedSec;
+  const btn = document.getElementById('chrono-stop-'+jspId);
+  if(btn){
+    btn.dataset.done = '1';
+    btn.textContent = '✓ '+elapsedSec+'s';
+    btn.style.display = 'none';
+  }
 }
 function saveSport(){
   const date = document.getElementById('sp-date').value;

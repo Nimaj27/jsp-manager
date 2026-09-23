@@ -1007,7 +1007,20 @@
       <div class="field"><label>Unité</label><input type="text" id="sp-unite" placeholder="m, rép, s…"></div>
       <div class="field"><label>Saison</label><input type="text" id="sp-saison" placeholder="2024-25" style="font-family:monospace"></div>
     </div>
-    <div class="field"><label>Résultats par JSP</label>
+    <div class="field">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <label style="margin:0">Résultats par JSP</label>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="toggleChrono()" id="chrono-toggle-btn">⏱️ Chronomètre</button>
+      </div>
+      <div id="chrono-panel" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin:8px 0;text-align:center">
+        <div id="chrono-display" style="font-size:32px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--sdis-or);margin-bottom:8px">00:00.0</div>
+        <div style="display:flex;gap:8px;justify-content:center">
+          <button type="button" class="btn btn-primary btn-sm" id="chrono-start-btn" onclick="startChrono()">▶️ Démarrer</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="chrono-stop-btn" onclick="stopChronoAll()" style="display:none">⏹️ Arrêter</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="resetChrono()">🔄 Réinitialiser</button>
+        </div>
+        <div style="font-size:11px;color:var(--txt-muted);margin-top:8px">Démarrez le chrono, puis cliquez sur "⏱ Stop" à côté d'un JSP dès qu'il termine — son temps se remplit automatiquement, le chrono continue pour les autres.</div>
+      </div>
       <div id="sp-results" style="display:flex;flex-direction:column;gap:2px;max-height:280px;overflow-y:auto;padding:8px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);"></div>
     </div>
     <div class="modal-footer">
