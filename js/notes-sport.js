@@ -358,9 +358,12 @@ function renderSport(){
 }
 
 function updateUniteHint(){
+  // Toujours remplacer par l'unité de l'épreuve sélectionnée : ce handler
+  // ne se déclenche que sur un changement d'épreuve, donc l'unité doit
+  // suivre (l'ancienne restait sinon affichée, ex. "m" pour un Test Killy
+  // choisi après Course 6 min).
   const opt = document.getElementById('sp-epreuve').selectedOptions[0];
-  const u = (opt&&opt.dataset&&opt.dataset.unite)||'';
-  if(!document.getElementById('sp-unite').value) document.getElementById('sp-unite').value = u;
+  document.getElementById('sp-unite').value = (opt&&opt.dataset&&opt.dataset.unite)||'';
 }
 function openSportModal(id=null, defaultEp=null){
   const sp = id ? sports.find(s=>s.id===id) : null;
