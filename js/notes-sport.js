@@ -492,3 +492,65 @@ function deleteSport(){
   save(); closeModal('modal-sport'); renderSport();
 }
 
+// ── Séance ICP (Indice de Conditions Physiques) ──────────────
+// Regroupe la saisie de 5 épreuves standard passées le même jour, pour
+// gagner du temps. Chaque épreuve reste stockée comme une fiche
+// "sports" séparée (même modèle que la saisie normale), pour rester
+// compatible avec le classement JSP de l'année, les fiches
+// individuelles, etc.
+const ICP_EPREUVES = [
+  {epreuve:'Test Luc-Léger', unite:'palier', key:'lucleger', label:'Luc-Léger'},
+  {epreuve:'Planche (gainage)', unite:'s', key:'planche', label:'Planche'},
+  {epreuve:'Souplesse', unite:'cm', key:'souplesse', label:'Souplesse'},
+  {epreuve:'Test Killy', unite:'s', key:'killy', label:'Killy'},
+  {epreuve:'Pompes', unite:'rép', key:'pompes', label:'Pompes'},
+];
+
+function openIcpModal(){
+  document.getElementById('icp-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('icp-saison').value = getSaison();
+  renderIcpTable();
+  document.getElementById('modal-icp').classList.add('open');
+}
+
+function renderIcpTable(){
+  const date = document.getElementById('icp-date').value;
+  const actifs = JSPs.filter(j=>j.statut==='Actif').sort((a,b)=>a.nom.localeCompare(b.nom));
+  // Pré-remplit avec les fiches déjà existantes à cette date, s'il y en a
+  const existing = {};
+  ICP_EPREUVES.forEach(ep=>{
+    const sp = sports.find(s=>s.date===date && s.epreuve===ep.epreuve);
+    existing[ep.key] = (sp && sp.resultats) || {};
+  });
+  document.getElementById('icp-rows').innerHTML = actifs.length ? actifs.map(j=>'<tr>'
+    +'<td>'+esc(j.nom)+' '+esc(j.prenom)+'</td>'
+    +ICP_EPREUVES.map(ep=>'<td><input type="number" step="any" id="icp-'+ep.key+'-'+j.id+'" value="'+(existing[ep.key][j.id]??'')+'" placeholder="—" style="width:70px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--txt);padding:5px;font-size:13px;outline:none"></td>').join('')
+    +'</tr>').join('') : '<tr><td colspan="6" style="color:var(--txt-muted)">Aucun JSP actif.</td></tr>';
+}
+
+function saveIcp(){
+  const date = document.getElementById('icp-date').value;
+  if(!date){ showToast('⚠️ Date obligatoire'); return; }
+  const saison = document.getElementById('icp-saison').value.trim()||getSaison();
+  const actifs = JSPs.filter(j=>j.statut==='Actif');
+  let nbEpreuves = 0;
+  ICP_EPREUVES.forEach((ep,i)=>{
+    const resultats = {};
+    actifs.forEach(j=>{
+      const el = document.getElementById('icp-'+ep.key+'-'+j.id);
+      const v = el ? el.value : '';
+      if(v!==''&&v!=null) resultats[j.id]=parseFloat(v);
+    });
+    if(!Object.keys(resultats).length) return; // n'enregistre pas une épreuve laissée vide
+    nbEpreuves++;
+    const existing = sports.find(s=>s.date===date && s.epreuve===ep.epreuve);
+    if(existing){ existing.unite=ep.unite; existing.saison=saison; existing.resultats=resultats; }
+    else { sports.push({id:Date.now()+i, date, epreuve:ep.epreuve, unite:ep.unite, saison, resultats}); }
+  });
+  if(!nbEpreuves){ showToast('⚠️ Renseignez au moins un résultat'); return; }
+  save();
+  logHistorique('Séance ICP', date+' — '+nbEpreuves+' épreuve(s)');
+  closeModal('modal-icp'); renderSport();
+  showToast('✅ Séance ICP enregistrée ('+nbEpreuves+' épreuve(s))');
+}
+

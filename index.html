@@ -390,6 +390,7 @@
   <div class="page-head">
     <h2>🏃 Épreuves sportives</h2>
     <button class="btn btn-primary" onclick="openSportModal()">＋ Saisir résultats</button>
+    <button class="btn btn-blue" onclick="openIcpModal()">🏋️ Séance ICP</button>
     <select class="filter-sel" id="sport-filter-saison" onchange="renderSport()">
       <option value="">Toutes saisons</option>
     </select>
@@ -1034,6 +1035,37 @@
       <div style="display:flex;gap:8px;margin-left:auto">
         <button class="btn btn-ghost" onclick="closeModal('modal-sport')">Annuler</button>
         <button class="btn btn-primary" onclick="saveSport()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL SÉANCE ICP (Indice de Conditions Physiques) ══════════ -->
+<div class="modal-bg" id="modal-icp">
+  <div class="modal" style="max-width:820px">
+    <h2>🏋️ Séance ICP — Indice de Conditions Physiques</h2>
+    <p style="font-size:12px;color:var(--txt-muted);margin-bottom:10px">Saisit en une fois les 5 épreuves du test ICP (Luc-Léger, Planche, Souplesse, Killy, Pompes) pour chaque JSP — enregistre une fiche résultat séparée par épreuve, comme d'habitude.</p>
+    <div class="field-row">
+      <div class="field"><label>Date *</label><input type="date" id="icp-date" onchange="renderIcpTable()"></div>
+      <div class="field"><label>Saison</label><input type="text" id="icp-saison" placeholder="2024-25" style="font-family:monospace"></div>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="tbl" id="icp-table" style="background:transparent;min-width:640px">
+        <thead><tr>
+          <th style="text-align:left">JSP</th>
+          <th>Luc-Léger<br><span style="font-weight:400;color:var(--txt-muted)">palier</span></th>
+          <th>Planche<br><span style="font-weight:400;color:var(--txt-muted)">s</span></th>
+          <th>Souplesse<br><span style="font-weight:400;color:var(--txt-muted)">cm</span></th>
+          <th>Killy<br><span style="font-weight:400;color:var(--txt-muted)">s</span></th>
+          <th>Pompes<br><span style="font-weight:400;color:var(--txt-muted)">rép</span></th>
+        </tr></thead>
+        <tbody id="icp-rows"></tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button class="btn btn-ghost" onclick="closeModal('modal-icp')">Annuler</button>
+        <button class="btn btn-primary" onclick="saveIcp()">Enregistrer</button>
       </div>
     </div>
   </div>
