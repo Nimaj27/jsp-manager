@@ -506,6 +506,35 @@ const ICP_EPREUVES = [
   {epreuve:'Pompes', unite:'rép', key:'pompes', label:'Pompes'},
 ];
 
+// Barème officiel SDIS (actualisation août 2004), tranche 18-29 ans —
+// utilisée pour tous les JSP quel que soit leur âge réel (barème le
+// plus indulgent, pas de tranche définie en-dessous de 18 ans). Pour
+// chaque épreuve, plus la valeur est haute, meilleur c'est.
+const BAREME_ICP = {
+  lucleger:  {H:{medecin:8,   standard:9.5}, F:{medecin:7,   standard:8.5}},
+  planche:   {H:{medecin:110, standard:120}, F:{medecin:110, standard:120}},
+  souplesse: {H:{medecin:23,  standard:26},  F:{medecin:23,  standard:26}},
+  killy:     {H:{medecin:110, standard:120}, F:{medecin:110, standard:120}},
+  pompes:    {H:{medecin:18,  standard:20},  F:{medecin:7,   standard:10}},
+};
+function zoneBareme(key, sexe, val){
+  const b = BAREME_ICP[key] && BAREME_ICP[key][sexe==='F'?'F':'H'];
+  if(!b || val===''||val==null||isNaN(val)) return null;
+  const v = parseFloat(val);
+  if(v<b.medecin) return {label:'⚠️ Médecin', color:'var(--danger)'};
+  if(v<b.standard) return {label:'🟡 À améliorer', color:'var(--warn)'};
+  return {label:'✅ Standard', color:'var(--ok)'};
+}
+function updateIcpZone(jspId, key){
+  const j = getJSP(jspId);
+  const input = document.getElementById('icp-'+key+'-'+jspId);
+  const badge = document.getElementById('icpz-'+key+'-'+jspId);
+  if(!input || !badge || !j) return;
+  const z = zoneBareme(key, j.sexe, input.value);
+  badge.textContent = z ? z.label : '';
+  badge.style.color = z ? z.color : '';
+}
+
 function openIcpModal(){
   document.getElementById('icp-date').value = new Date().toISOString().slice(0,10);
   document.getElementById('icp-saison').value = getSaison();
@@ -524,8 +553,18 @@ function renderIcpTable(){
   });
   document.getElementById('icp-rows').innerHTML = actifs.length ? actifs.map(j=>'<tr>'
     +'<td>'+esc(j.nom)+' '+esc(j.prenom)+'</td>'
-    +ICP_EPREUVES.map(ep=>'<td><input type="number" step="any" id="icp-'+ep.key+'-'+j.id+'" value="'+(existing[ep.key][j.id]??'')+'" placeholder="—" style="width:70px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--txt);padding:5px;font-size:13px;outline:none"></td>').join('')
+    +ICP_EPREUVES.map(ep=>{
+      const v = existing[ep.key][j.id]??'';
+      return '<td>'
+        +'<input type="number" step="any" id="icp-'+ep.key+'-'+j.id+'" value="'+v+'" placeholder="—" '
+        +'oninput="updateIcpZone('+j.id+',\''+ep.key+'\')" '
+        +'style="width:70px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--txt);padding:5px;font-size:13px;outline:none">'
+        +'<div id="icpz-'+ep.key+'-'+j.id+'" style="font-size:9px;margin-top:2px;white-space:nowrap"></div>'
+        +'</td>';
+    }).join('')
     +'</tr>').join('') : '<tr><td colspan="6" style="color:var(--txt-muted)">Aucun JSP actif.</td></tr>';
+  // Affiche la zone du barème pour les valeurs déjà pré-remplies
+  actifs.forEach(j=>ICP_EPREUVES.forEach(ep=>updateIcpZone(j.id, ep.key)));
 }
 
 function saveIcp(){
