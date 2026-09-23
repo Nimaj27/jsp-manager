@@ -742,8 +742,10 @@ function renderSuivi(){
     html += `<div class="empty"><div class="empty-icon">📊</div>Pas encore de données pour ${fSaison}. Enregistrez des séances pour voir l'assiduité.</div>`;
   }
 
-  // Alerte décrochage
-  const decrocheurs = assidList.filter(e=>e.a<50);
+  // Alerte décrochage — seulement à partir d'un minimum de séances : sinon
+  // un début de saison sans appel encore fait, ou une seule séance ratée,
+  // marque à tort tout le monde "en décrochage" dès le premier calcul.
+  const decrocheurs = sSeances.length>=3 ? assidList.filter(e=>e.a<50) : [];
   if(decrocheurs.length){
     html = `<div class="stats-card" style="border-color:rgba(192,57,43,.4);background:rgba(192,57,43,.06)">
       <h3 style="color:var(--danger)">⚠️ JSP en décrochage (< 50%)</h3>
