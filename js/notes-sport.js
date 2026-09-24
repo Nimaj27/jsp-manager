@@ -555,16 +555,19 @@ function renderIcpTable(){
     +'<td>'+esc(j.nom)+' '+esc(j.prenom)+'</td>'
     +ICP_EPREUVES.map(ep=>{
       const v = existing[ep.key][j.id]??'';
+      const isChronoable = ep.key==='killy'||ep.key==='planche';
       return '<td>'
         +'<input type="number" step="any" id="icp-'+ep.key+'-'+j.id+'" value="'+v+'" placeholder="—" '
         +'oninput="updateIcpZone('+j.id+',\''+ep.key+'\')" '
         +'style="width:70px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--txt);padding:5px;font-size:13px;outline:none">'
+        +(isChronoable ? '<button type="button" class="btn btn-ghost btn-sm icp-chrono-stop-jsp" data-key="'+ep.key+'" id="icp-chrono-stop-'+ep.key+'-'+j.id+'" onclick="stopIcpChronoForJsp('+j.id+')" style="display:none;margin-top:2px;font-size:10px;padding:2px 6px">⏱ Stop</button>' : '')
         +'<div id="icpz-'+ep.key+'-'+j.id+'" style="font-size:9px;margin-top:2px;white-space:nowrap"></div>'
         +'</td>';
     }).join('')
     +'</tr>').join('') : '<tr><td colspan="6" style="color:var(--txt-muted)">Aucun JSP actif.</td></tr>';
   // Affiche la zone du barème pour les valeurs déjà pré-remplies
   actifs.forEach(j=>ICP_EPREUVES.forEach(ep=>updateIcpZone(j.id, ep.key)));
+  resetIcpChrono();
 }
 
 function saveIcp(){
@@ -591,5 +594,84 @@ function saveIcp(){
   logHistorique('Séance ICP', date+' — '+nbEpreuves+' épreuve(s)');
   closeModal('modal-icp'); renderSport();
   showToast('✅ Séance ICP enregistrée ('+nbEpreuves+' épreuve(s))');
+}
+
+// ── Chronomètre pour la séance ICP (Killy / Planche) ─────────────
+// Même principe que le chronomètre de la saisie simple : un seul
+// chrono partagé, "⏱ Stop" par JSP fige son temps sans arrêter les
+// autres. L'épreuve ciblée (Killy ou Planche) se choisit dans le menu
+// déroulant au-dessus du tableau.
+let icpChronoRunning = false;
+let icpChronoStartTs = null;
+let icpChronoIntervalId = null;
+let icpChronoElapsedFrozen = 0;
+
+function toggleIcpChrono(){
+  const panel = document.getElementById('icp-chrono-panel');
+  const showing = panel.style.display !== 'none';
+  panel.style.display = showing ? 'none' : 'block';
+  updateIcpChronoStopButtons();
+}
+
+function updateIcpChronoStopButtons(){
+  const panelOpen = document.getElementById('icp-chrono-panel').style.display !== 'none';
+  const epreuve = document.getElementById('icp-chrono-epreuve').value;
+  document.querySelectorAll('.icp-chrono-stop-jsp').forEach(btn=>{
+    const match = btn.dataset.key === epreuve;
+    btn.style.display = (panelOpen && icpChronoRunning && match && btn.dataset.done!=='1') ? 'inline-flex' : 'none';
+  });
+}
+
+function startIcpChrono(){
+  if(icpChronoRunning) return;
+  icpChronoRunning = true;
+  icpChronoStartTs = Date.now() - (icpChronoElapsedFrozen||0);
+  document.getElementById('icp-chrono-start-btn').style.display = 'none';
+  document.getElementById('icp-chrono-stop-btn').style.display = 'inline-flex';
+  updateIcpChronoStopButtons();
+  icpChronoIntervalId = setInterval(()=>{
+    document.getElementById('icp-chrono-display').textContent = formatChrono(Date.now()-icpChronoStartTs);
+  }, 100);
+}
+
+function stopIcpChronoAll(){
+  icpChronoRunning = false;
+  icpChronoElapsedFrozen = Date.now() - icpChronoStartTs;
+  clearInterval(icpChronoIntervalId);
+  document.getElementById('icp-chrono-start-btn').style.display = 'inline-flex';
+  document.getElementById('icp-chrono-start-btn').textContent = '▶️ Reprendre';
+  document.getElementById('icp-chrono-stop-btn').style.display = 'none';
+  updateIcpChronoStopButtons();
+}
+
+function resetIcpChrono(){
+  icpChronoRunning = false;
+  icpChronoElapsedFrozen = 0;
+  clearInterval(icpChronoIntervalId);
+  const display = document.getElementById('icp-chrono-display');
+  if(display) display.textContent = '00:00.0';
+  const startBtn = document.getElementById('icp-chrono-start-btn');
+  if(startBtn){ startBtn.style.display = 'inline-flex'; startBtn.textContent = '▶️ Démarrer'; }
+  const stopBtn = document.getElementById('icp-chrono-stop-btn');
+  if(stopBtn) stopBtn.style.display = 'none';
+  document.querySelectorAll('.icp-chrono-stop-jsp').forEach(btn=>{
+    btn.style.display = 'none';
+    btn.dataset.done = '';
+    btn.textContent = '⏱ Stop';
+  });
+}
+
+function stopIcpChronoForJsp(jspId){
+  if(!icpChronoRunning) return;
+  const epreuve = document.getElementById('icp-chrono-epreuve').value;
+  const elapsedSec = Math.round((Date.now()-icpChronoStartTs)/100)/10;
+  const input = document.getElementById('icp-'+epreuve+'-'+jspId);
+  if(input){ input.value = elapsedSec; updateIcpZone(jspId, epreuve); }
+  const btn = document.getElementById('icp-chrono-stop-'+epreuve+'-'+jspId);
+  if(btn){
+    btn.dataset.done = '1';
+    btn.textContent = '✓ '+elapsedSec+'s';
+    btn.style.display = 'none';
+  }
 }
 

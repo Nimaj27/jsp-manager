@@ -1049,6 +1049,22 @@
       <div class="field"><label>Date *</label><input type="date" id="icp-date" onchange="renderIcpTable()"></div>
       <div class="field"><label>Saison</label><input type="text" id="icp-saison" placeholder="2024-25" style="font-family:monospace"></div>
     </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <select id="icp-chrono-epreuve" onchange="updateIcpChronoStopButtons()" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--txt);padding:6px 10px;font-size:13px;outline:none">
+        <option value="killy">Killy</option>
+        <option value="planche">Planche</option>
+      </select>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="toggleIcpChrono()" id="icp-chrono-toggle-btn">⏱️ Chronomètre</button>
+    </div>
+    <div id="icp-chrono-panel" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin:0 0 8px;text-align:center">
+      <div id="icp-chrono-display" style="font-size:32px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--sdis-or);margin-bottom:8px">00:00.0</div>
+      <div style="display:flex;gap:8px;justify-content:center">
+        <button type="button" class="btn btn-primary btn-sm" id="icp-chrono-start-btn" onclick="startIcpChrono()">▶️ Démarrer</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="icp-chrono-stop-btn" onclick="stopIcpChronoAll()" style="display:none">⏹️ Arrêter</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="resetIcpChrono()">🔄 Réinitialiser</button>
+      </div>
+      <div style="font-size:11px;color:var(--txt-muted);margin-top:8px">Choisissez l'épreuve chronométrée ci-dessus, démarrez, puis cliquez sur "⏱ Stop" à côté d'un JSP dès qu'il termine.</div>
+    </div>
     <div style="overflow-x:auto">
       <table class="tbl" id="icp-table" style="background:transparent;min-width:640px">
         <thead><tr>
