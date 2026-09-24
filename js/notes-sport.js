@@ -535,11 +535,29 @@ function updateIcpZone(jspId, key){
   badge.style.color = z ? z.color : '';
 }
 
+let icpLastDate = null;
+
 function openIcpModal(){
   document.getElementById('icp-date').value = new Date().toISOString().slice(0,10);
   document.getElementById('icp-saison').value = getSaison();
+  icpLastDate = document.getElementById('icp-date').value;
   renderIcpTable();
   document.getElementById('modal-icp').classList.add('open');
+}
+
+function onIcpDateChange(){
+  const dateInput = document.getElementById('icp-date');
+  if(icpChronoRunning && !confirm('Le chronomètre est en cours. Changer la date va le réinitialiser. Continuer ?')){
+    dateInput.value = icpLastDate;
+    return;
+  }
+  icpLastDate = dateInput.value;
+  renderIcpTable();
+}
+
+function closeIcpModal(){
+  resetIcpChrono();
+  closeModal('modal-icp');
 }
 
 function renderIcpTable(){
@@ -592,7 +610,7 @@ function saveIcp(){
   if(!nbEpreuves){ showToast('⚠️ Renseignez au moins un résultat'); return; }
   save();
   logHistorique('Séance ICP', date+' — '+nbEpreuves+' épreuve(s)');
-  closeModal('modal-icp'); renderSport();
+  closeIcpModal(); renderSport();
   showToast('✅ Séance ICP enregistrée ('+nbEpreuves+' épreuve(s))');
 }
 
@@ -610,6 +628,17 @@ function toggleIcpChrono(){
   const panel = document.getElementById('icp-chrono-panel');
   const showing = panel.style.display !== 'none';
   panel.style.display = showing ? 'none' : 'block';
+  updateIcpChronoStopButtons();
+}
+
+function changeIcpChronoEpreuve(){
+  // Killy et Planche sont deux épreuves distinctes : basculer de l'une à
+  // l'autre pendant que le chrono tourne doit repartir de zéro, sinon le
+  // temps écoulé de la première épreuve se reporte sur la seconde.
+  if(icpChronoRunning){
+    icpChronoStartTs = Date.now();
+    icpChronoElapsedFrozen = 0;
+  }
   updateIcpChronoStopButtons();
 }
 
