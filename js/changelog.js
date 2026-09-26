@@ -3,9 +3,13 @@
 //  Pour ajouter une entrée : insérer un nouveau groupe en tête de
 //  CHANGELOG, avec la date du jour et la liste des changements.
 // ════════════════════════════════════════════════════════════
-const APP_VERSION = 'v5.3';
+const APP_VERSION = 'v5.4';
 
 const CHANGELOG = [
+  { date:'2026-09-26', items:[
+    'Corrige le chronomètre de la séance ICP : changer d\'épreuve (Killy/Planche) dans le menu déroulant réinitialise désormais le temps, pour éviter d\'enregistrer un résultat aberrant.',
+    'Corrige le chronomètre de la séance ICP qui continuait de tourner en arrière-plan après fermeture de la fenêtre.',
+  ]},
   { date:'2026-09-23', items:[
     'Sport : ajoute un chronomètre pour les épreuves chronométrées — un clic sur un JSP fige son temps sans arrêter le chrono des autres.',
     'Sport : ajoute les épreuves Test Killy, Planche (gainage), Vitesse (sprint), Souplesse et Test Luc-Léger.',

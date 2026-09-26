@@ -592,7 +592,7 @@ function saveIcp(){
   if(!nbEpreuves){ showToast('⚠️ Renseignez au moins un résultat'); return; }
   save();
   logHistorique('Séance ICP', date+' — '+nbEpreuves+' épreuve(s)');
-  closeModal('modal-icp'); renderSport();
+  closeIcpModal(); renderSport();
   showToast('✅ Séance ICP enregistrée ('+nbEpreuves+' épreuve(s))');
 }
 
@@ -659,6 +659,13 @@ function resetIcpChrono(){
     btn.dataset.done = '';
     btn.textContent = '⏱ Stop';
   });
+}
+
+// Arrête le chrono avant de fermer la modale ICP pour éviter que
+// l'intervalle continue de tourner en arrière-plan (fuite de setInterval).
+function closeIcpModal(){
+  resetIcpChrono();
+  closeModal('modal-icp');
 }
 
 function stopIcpChronoForJsp(jspId){

@@ -1050,7 +1050,7 @@
       <div class="field"><label>Saison</label><input type="text" id="icp-saison" placeholder="2024-25" style="font-family:monospace"></div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <select id="icp-chrono-epreuve" onchange="updateIcpChronoStopButtons()" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--txt);padding:6px 10px;font-size:13px;outline:none">
+      <select id="icp-chrono-epreuve" onchange="resetIcpChrono();updateIcpChronoStopButtons()" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--txt);padding:6px 10px;font-size:13px;outline:none">
         <option value="killy">Killy</option>
         <option value="planche">Planche</option>
       </select>
@@ -1080,7 +1080,7 @@
     </div>
     <div class="modal-footer">
       <div style="display:flex;gap:8px;margin-left:auto">
-        <button class="btn btn-ghost" onclick="closeModal('modal-icp')">Annuler</button>
+        <button class="btn btn-ghost" onclick="closeIcpModal()">Annuler</button>
         <button class="btn btn-primary" onclick="saveIcp()">Enregistrer</button>
       </div>
     </div>
