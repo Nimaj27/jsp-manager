@@ -72,6 +72,7 @@ async function save(){
     });
     publishPublicCours();
     publishPublicPlanning();
+    publishPublicControles();
   } catch(e){
     console.warn('Firebase save error:', e.message);
     showToast('⚠️ Sauvegardé localement (sync échouée)');
@@ -113,6 +114,24 @@ async function publishPublicPlanning(){
       updatedAt: new Date().toISOString(),
     });
   } catch(e){ console.warn('Publish planning public error:', e.message); }
+}
+
+// ── Miroir public restreint pour jsp_public.html (sujets/corrigés) ──
+// Uniquement les liens sujet/corrigé, jamais les notes : la page
+// publique applique elle-même le délai d'un jour avant d'afficher les
+// liens (voir isControleVisibleJeunes dans js/controle.js).
+async function publishPublicControles(){
+  if(!window._fb || !window._fbUser) return;
+  const {db, doc, setDoc} = window._fb;
+  try {
+    await setDoc(doc(db, 'public_controles', SECTION_ID), {
+      controles: controles.filter(c => c.lienSujet || c.lienCorrige).map(c => ({
+        id: c.id, date: c.date || '', theme: c.theme || '',
+        lienSujet: c.lienSujet || '', lienCorrige: c.lienCorrige || '',
+      })),
+      updatedAt: new Date().toISOString(),
+    });
+  } catch(e){ console.warn('Publish controles public error:', e.message); }
 }
 
 // ── Présences de séance (sous-collection séparée) ───────────

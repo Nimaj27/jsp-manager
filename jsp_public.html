@@ -124,6 +124,7 @@
 <div class="tabs-public">
   <button class="tab-btn active" id="tab-btn-planning" onclick="showPublicTab('planning')">📅 Planning</button>
   <button class="tab-btn" id="tab-btn-cours" onclick="showPublicTab('cours')">📚 Cours</button>
+  <button class="tab-btn" id="tab-btn-controles" onclick="showPublicTab('controles')">📋 Contrôles</button>
 </div>
 <div class="container">
   <div id="tab-planning">
@@ -136,6 +137,14 @@
   </div>
   <div id="tab-cours" style="display:none">
     <div id="cours-public-content">
+      <div class="loading">
+        <div class="spinner"></div>
+        Chargement...
+      </div>
+    </div>
+  </div>
+  <div id="tab-controles" style="display:none">
+    <div id="controles-public-content">
       <div class="loading">
         <div class="spinner"></div>
         Chargement...
@@ -287,6 +296,7 @@ function renderCoursPinScreen(){
     if(!j || !j.pin || j.pin !== code){ err.textContent = 'Code incorrect'; return; }
     coursUnlockedJsp = j;
     renderCoursList();
+    renderControlesTab();
   };
 }
 
@@ -322,12 +332,58 @@ onSnapshot(doc(db, 'public_cours', 'pacy'), snap => {
   coursContent.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>Impossible de charger les cours.<br><small>' + err.message + '</small></div>';
 });
 
-// ── Bascule d'onglet (planning / cours) ────────────────────────────────
+// ── Onglet Contrôles (miroir public restreint public_controles/pacy) ──
+// Réutilise le même déverrouillage par code PIN que l'onglet Cours
+// (coursUnlockedJsp) : pas besoin de ressaisir le code.
+let controlesPublicData = null;
+const controlesContent = document.getElementById('controles-public-content');
+
+function isControleVisibleJeunes(dateStr){
+  const demain = new Date(dateStr); demain.setDate(demain.getDate()+1);
+  return new Date().toISOString().slice(0,10) >= demain.toISOString().slice(0,10);
+}
+
+function renderControlesTab(){
+  if(!coursUnlockedJsp){
+    controlesContent.innerHTML = '<div class="empty"><div class="empty-icon">🔒</div>Connecte-toi d\'abord depuis l\'onglet Cours avec ton code PIN.<br><br>'
+      + '<a href="javascript:void(0)" onclick="showPublicTab(\'cours\')" class="cours-link">📚 Aller à l\'onglet Cours</a></div>';
+    return;
+  }
+  if(!controlesPublicData) return; // en attente du premier snapshot
+  const list = (controlesPublicData.controles||[])
+    .filter(c => isControleVisibleJeunes(c.date) && (c.lienSujet || c.lienCorrige))
+    .sort((a,b) => b.date.localeCompare(a.date));
+  if(!list.length){
+    controlesContent.innerHTML = '<div class="empty"><div class="empty-icon">📋</div>Aucun sujet ou corrigé disponible pour le moment.</div>';
+    return;
+  }
+  let html = `<div class="section-title">Bonjour ${esc(coursUnlockedJsp.prenom)} 👋</div>`;
+  html += list.map(c => `
+    <div class="cours-card">
+      <div class="cours-titre">${esc(c.theme||'Contrôle')}</div>
+      <div class="cours-desc">${cap(formatDate(c.date))}</div>
+      ${c.lienSujet ? `<a class="cours-link" href="${esc(c.lienSujet)}" target="_blank" rel="noopener">📄 Voir le sujet</a>` : ''}
+      ${c.lienCorrige ? `<a class="cours-link" href="${esc(c.lienCorrige)}" target="_blank" rel="noopener">✅ Voir le corrigé</a>` : ''}
+    </div>`).join('');
+  controlesContent.innerHTML = html;
+}
+
+onSnapshot(doc(db, 'public_controles', 'pacy'), snap => {
+  controlesPublicData = snap.exists() ? snap.data() : {controles:[]};
+  renderControlesTab();
+}, err => {
+  controlesContent.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>Impossible de charger les contrôles.<br><small>' + err.message + '</small></div>';
+});
+
+// ── Bascule d'onglet (planning / cours / contrôles) ─────────────────────
 window.showPublicTab = function(tab){
   document.getElementById('tab-planning').style.display = tab==='planning' ? '' : 'none';
   document.getElementById('tab-cours').style.display = tab==='cours' ? '' : 'none';
+  document.getElementById('tab-controles').style.display = tab==='controles' ? '' : 'none';
   document.getElementById('tab-btn-planning').classList.toggle('active', tab==='planning');
   document.getElementById('tab-btn-cours').classList.toggle('active', tab==='cours');
+  document.getElementById('tab-btn-controles').classList.toggle('active', tab==='controles');
+  if(tab==='controles') renderControlesTab();
 };
 
 // Lien direct vers l'onglet Cours (utilisé par cours_public.html en redirection)

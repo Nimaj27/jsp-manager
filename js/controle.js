@@ -7,6 +7,14 @@
 // suivi-parametres.js : POIDS_JSP_ANNEE.controle).
 var CONTROLE_SEUIL_DEFAUT = 10;
 
+// Le sujet/corrigé ne deviennent consultables par les jeunes que le
+// lendemain du contrôle (pour ne pas divulguer le sujet avant l'épreuve,
+// ni le corrigé avant que tout le monde ait pu le passer).
+function isControleVisibleJeunes(dateStr){
+  var demain = new Date(dateStr); demain.setDate(demain.getDate()+1);
+  return new Date().toISOString().slice(0,10) >= demain.toISOString().slice(0,10);
+}
+
 function fillControleSaisonSelect(){
   var sel = document.getElementById('ctrl-filter-saison');
   if(!sel) return;
@@ -26,6 +34,8 @@ function openControleModal(id){
   document.getElementById('ctrl-saison').value = c ? c.saison : getSaison();
   document.getElementById('ctrl-theme').value = c ? c.theme || '' : '';
   document.getElementById('ctrl-seuil').value = c && c.seuil!=null ? c.seuil : CONTROLE_SEUIL_DEFAUT;
+  document.getElementById('ctrl-lien-sujet').value = c ? c.lienSujet || '' : '';
+  document.getElementById('ctrl-lien-corrige').value = c ? c.lienCorrige || '' : '';
   document.getElementById('ctrl-delete').style.display = c ? 'inline-flex' : 'none';
   renderControleGrid(c ? c.resultats : {});
   document.getElementById('modal-controle').classList.add('open');
@@ -79,9 +89,11 @@ function saveControle(){ if(!checkAcces('formateur')) return;
       if(!isNaN(v)) resultats[j.id] = v;
     }
   });
-  if(!Object.keys(resultats).length){ showToast('⚠️ Renseignez au moins une note'); return; }
+  var lienSujet = document.getElementById('ctrl-lien-sujet').value.trim();
+  var lienCorrige = document.getElementById('ctrl-lien-corrige').value.trim();
+  if(!Object.keys(resultats).length && !lienSujet && !lienCorrige){ showToast('⚠️ Renseignez au moins une note ou un lien'); return; }
   var id = document.getElementById('ctrl-id').value;
-  var data = {date:date, theme:theme, saison:saison, seuil:seuil, resultats:resultats};
+  var data = {date:date, theme:theme, saison:saison, seuil:seuil, resultats:resultats, lienSujet:lienSujet, lienCorrige:lienCorrige};
   if(id){ var i = controles.findIndex(function(c){return c.id===+id;}); controles[i] = Object.assign({id:+id}, data); }
   else { data.id = Date.now(); controles.push(data); }
   save();
@@ -159,6 +171,13 @@ function renderControle(){
         +'<td style="text-align:center">'+(reussi?'<span class="badge badge-green">✅ Réussi</span>':'<span class="badge badge-red">❌ Échoué</span>')+'</td></tr>';
     }).join('');
     var dateStr = new Date(c.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+    var visibleJeunes = isControleVisibleJeunes(c.date);
+    var liens = '';
+    if(c.lienSujet) liens += '<a href="'+esc(c.lienSujet)+'" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">📄 Sujet</a>';
+    if(c.lienCorrige) liens += '<a href="'+esc(c.lienCorrige)+'" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">✅ Corrigé</a>';
+    if(liens) liens += '<span style="font-size:11px;color:var(--txt-muted)">'
+      +(visibleJeunes?'👁️ visible des jeunes':'🔒 visible des jeunes à partir du '+new Date(new Date(c.date).getTime()+86400000).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}))
+      +'</span>';
     return '<div class="stats-card" style="margin-bottom:12px">'
       +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">'
       +'<h3 style="margin:0">'+esc(c.theme||'Contrôle')+'</h3>'
@@ -166,6 +185,7 @@ function renderControle(){
       +(moyenne!==null?'<span style="font-size:12px;color:var(--txt-muted)">— moyenne '+moyenne+'/20 · '+nbReussis+'/'+resultats.length+' réussi(s) (seuil '+seuil+'/20)</span>':'')
       +'<button class="btn btn-ghost btn-icon btn-sm" style="margin-left:auto" onclick="openControleModal('+c.id+')">✏️</button>'
       +'</div>'
+      +(liens?'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+liens+'</div>':'')
       +'<div style="overflow-x:auto"><table class="tbl" style="background:transparent">'
       +'<thead><tr><th>JSP</th><th style="text-align:center">Note</th><th style="text-align:center">Résultat</th></tr></thead>'
       +'<tbody>'+rows+'</tbody></table></div></div>';
