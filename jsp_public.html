@@ -265,7 +265,7 @@ onSnapshot(doc(db, 'public_planning', 'pacy'), snap => {
 });
 
 // ── Onglet Cours (miroir public restreint public_cours/pacy) ──────────
-let coursPublicData = null; // {cours:[...], jsps:[{id,prenom,pin}]}
+let coursPublicData = null; // {cours:[...], jsps:[{id,nom,prenom,pin}]}
 let coursUnlockedJsp = null;
 const coursContent = document.getElementById('cours-public-content');
 
@@ -275,13 +275,13 @@ function esc(s){
 }
 
 function renderCoursPinScreen(){
-  const jsps = (coursPublicData.jsps||[]).slice().sort((a,b)=>a.prenom.localeCompare(b.prenom));
+  const jsps = (coursPublicData.jsps||[]).slice().sort((a,b)=>(a.nom||'').localeCompare(b.nom||'') || a.prenom.localeCompare(b.prenom));
   coursContent.innerHTML = `
     <div class="pin-card">
       <h2>🔑 Accès aux cours</h2>
       <select id="pin-jsp">
-        <option value="">— Choisis ton prénom —</option>
-        ${jsps.map(j => `<option value="${esc(j.id)}">${esc(j.prenom)}</option>`).join('')}
+        <option value="">— Choisis ton nom —</option>
+        ${jsps.map(j => `<option value="${esc(j.id)}">${esc(j.nom||'')} ${esc(j.prenom)}</option>`).join('')}
       </select>
       <input type="text" id="pin-code" maxlength="4" inputmode="numeric" placeholder="Code PIN">
       <button id="pin-submit">Voir les cours</button>
