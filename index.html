@@ -151,6 +151,7 @@
   <div class="tab" data-tab="concours" onclick="showTab('concours')">🏆 Concours</div>
   <div class="tab" data-tab="manoeuvre" onclick="showTab('manoeuvre')">📝 Séquenceur</div>
   <div class="tab" data-tab="formation" onclick="showTab('formation')">🎓 Formation</div>
+  <div class="tab" data-tab="controle" onclick="showTab('controle')">📋 Contrôle</div>
   <div class="tab" data-tab="cours" onclick="showTab('cours')">📚 Cours</div>
   <div class="tab" data-tab="suivi" onclick="showTab('suivi')">📊 Suivi</div>
 </div>
@@ -719,6 +720,40 @@
   <div id="formation-content"></div>
 </div>
 
+<!-- ══════════ PAGE CONTRÔLE ══════════ -->
+<div class="page" id="page-controle">
+  <div class="page-head">
+    <h2>📋 Contrôles de connaissances</h2>
+    <select class="filter-sel" id="ctrl-filter-saison" onchange="renderControle()"></select>
+    <button class="btn btn-primary btn-sm" onclick="openControleModal()">+ Nouveau contrôle</button>
+  </div>
+  <div id="controle-content"></div>
+</div>
+
+<!-- ══════════ MODAL CONTRÔLE ══════════ -->
+<div class="modal-bg" id="modal-controle">
+  <div class="modal" style="max-width:520px">
+    <h2 id="modal-controle-title">Nouveau contrôle</h2>
+    <input type="hidden" id="ctrl-id">
+    <div class="field-row">
+      <div class="field"><label>Date *</label><input type="date" id="ctrl-date"></div>
+      <div class="field"><label>Saison</label><input type="text" id="ctrl-saison" placeholder="2025-26" style="font-family:monospace"></div>
+    </div>
+    <div class="field-row">
+      <div class="field" style="flex:2"><label>Thème *</label><input type="text" id="ctrl-theme" placeholder="Ex: Théorie incendie, Secourisme, Réglementation..."></div>
+      <div class="field"><label>Seuil de réussite /20</label><input type="number" id="ctrl-seuil" min="0" max="20" step="0.5" value="10" oninput="updateControleAllBadges()"></div>
+    </div>
+    <div id="ctrl-grid" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;max-height:320px;overflow-y:auto"></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="ctrl-delete" onclick="deleteControle()" style="display:none">🗑️ Supprimer</button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button class="btn btn-ghost" onclick="closeModal('modal-controle')">Annuler</button>
+        <button class="btn btn-primary" onclick="saveControle()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════ PAGE COURS ══════════ -->
 <div class="page" id="page-cours">
   <div class="page-head">
@@ -1046,11 +1081,11 @@
     <h2>🏋️ Séance ICP — Indice de Conditions Physiques</h2>
     <p style="font-size:12px;color:var(--txt-muted);margin-bottom:10px">Saisit en une fois les 5 épreuves du test ICP (Luc-Léger, Planche, Souplesse, Killy, Pompes) pour chaque JSP — enregistre une fiche résultat séparée par épreuve, comme d'habitude.</p>
     <div class="field-row">
-      <div class="field"><label>Date *</label><input type="date" id="icp-date" onchange="renderIcpTable()"></div>
+      <div class="field"><label>Date *</label><input type="date" id="icp-date" onchange="onIcpDateChange()"></div>
       <div class="field"><label>Saison</label><input type="text" id="icp-saison" placeholder="2024-25" style="font-family:monospace"></div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <select id="icp-chrono-epreuve" onchange="updateIcpChronoStopButtons()" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--txt);padding:6px 10px;font-size:13px;outline:none">
+      <select id="icp-chrono-epreuve" onchange="changeIcpChronoEpreuve()" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--txt);padding:6px 10px;font-size:13px;outline:none">
         <option value="killy">Killy</option>
         <option value="planche">Planche</option>
       </select>
@@ -1080,7 +1115,7 @@
     </div>
     <div class="modal-footer">
       <div style="display:flex;gap:8px;margin-left:auto">
-        <button class="btn btn-ghost" onclick="closeModal('modal-icp')">Annuler</button>
+        <button class="btn btn-ghost" onclick="closeIcpModal()">Annuler</button>
         <button class="btn btn-primary" onclick="saveIcp()">Enregistrer</button>
       </div>
     </div>
@@ -1248,6 +1283,7 @@
 <script src="js/sport-challenge-suivi.js"></script>
 <script src="js/concours.js"></script>
 <script src="js/formation.js"></script>
+<script src="js/controle.js"></script>
 <script src="js/cours.js"></script>
 
 <script src="js/sequenceur.js"></script>

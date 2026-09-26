@@ -272,10 +272,11 @@ function exportBilanAnnuel(){
 
 // Pondération du score automatique
 var POIDS_JSP_ANNEE = {
-  assiduite:  35,  // 35% du score
-  formation:  30,  // 30%
-  manoeuvre:  20,  // 20%
+  assiduite:  30,  // 30% du score
+  formation:  25,  // 25%
+  manoeuvre:  15,  // 15%
   sport:      15,  // 15%
+  controle:   15,  // 15%
 };
 
 function calcScoreAutoJsp(jspId, saison){
@@ -304,12 +305,21 @@ function calcScoreAutoJsp(jspId, saison){
     ? Math.round(myNotes.reduce(function(a,n){return a+n.note;},0)/myNotes.length*5)
     : 0;
 
+  // Contrôle de connaissances : moyenne des notes /20 → /100 (saison en cours)
+  var myControles = controles.filter(function(c){
+    return (!saison || c.saison===saison) && c.resultats && c.resultats[jspId]!==undefined;
+  }).map(function(c){ return c.resultats[jspId]; });
+  var scoreControle = myControles.length
+    ? Math.round(myControles.reduce(function(a,b){return a+b;},0)/myControles.length*5)
+    : 0;
+
   // Sport : score relatif par rapport au meilleur JSP (nécessite calcul global)
   // On renvoie null ici, calculé globalement dans renderJspAnnee
   return {
     assiduite: scoreAssid,
     formation: scoreForm,
     manoeuvre: scoreMano,
+    controle: scoreControle,
     sport: null, // calculé après
   };
 }
@@ -343,7 +353,8 @@ function calcScoreTotal(scores){
     scores.assiduite * POIDS_JSP_ANNEE.assiduite / 100 +
     scores.formation * POIDS_JSP_ANNEE.formation / 100 +
     scores.manoeuvre * POIDS_JSP_ANNEE.manoeuvre / 100 +
-    scores.sport     * POIDS_JSP_ANNEE.sport     / 100
+    scores.sport     * POIDS_JSP_ANNEE.sport     / 100 +
+    scores.controle  * POIDS_JSP_ANNEE.controle  / 100
   );
 }
 
@@ -414,6 +425,7 @@ function renderJspAnnee(){
       +'<td style="text-align:center"><span style="color:var(--sdis-bleu)">'+sc.formation+'%</span></td>'
       +'<td style="text-align:center"><span style="color:var(--sdis-or)">'+sc.manoeuvre+'</span></td>'
       +'<td style="text-align:center"><span style="color:#7c3aed">'+sc.sport+'</span></td>'
+      +'<td style="text-align:center"><span style="color:#0891b2">'+sc.controle+'</span></td>'
       +'<td style="text-align:center">'+(sc.voteScore!==null?'<strong>'+sc.voteScore+'</strong> <span style="font-size:10px;color:var(--txt-muted)">('+sc.nbVotes+'v)</span>':'<span style="color:var(--txt-muted)">—</span>')+'</td>'
       +'<td style="text-align:center"><strong style="font-size:16px;color:'+(i===0?'var(--sdis-or)':'var(--txt)')+'">'+sc.scoreFinal+'</strong></td>'
       +'<td><button class="btn btn-ghost btn-icon btn-sm" onclick="openTimeline('+j.id+')">📊</button></td>'
@@ -464,6 +476,7 @@ function renderJspAnnee(){
     +'<th style="text-align:center" title="Poids '+POIDS_JSP_ANNEE.formation+'%">Form. ('+POIDS_JSP_ANNEE.formation+'%)</th>'
     +'<th style="text-align:center" title="Poids '+POIDS_JSP_ANNEE.manoeuvre+'%">Man. ('+POIDS_JSP_ANNEE.manoeuvre+'%)</th>'
     +'<th style="text-align:center" title="Poids '+POIDS_JSP_ANNEE.sport+'%">Sport ('+POIDS_JSP_ANNEE.sport+'%)</th>'
+    +'<th style="text-align:center" title="Poids '+POIDS_JSP_ANNEE.controle+'%">Contrôle ('+POIDS_JSP_ANNEE.controle+'%)</th>'
     +'<th style="text-align:center">Votes /10</th>'
     +'<th style="text-align:center">Score final</th>'
     +'<th></th>'
@@ -781,7 +794,7 @@ function exportData(){
   const data = {
     club: localStorage.getItem('jsp_club_name')||'',
     jsps: JSPs, seances: seances, sports: sports, concours: concours,
-    notesman: notesMan, cours: cours,
+    notesman: notesMan, cours: cours, controles: controles,
     seqPlanif: (typeof seqPlanif!=='undefined'?seqPlanif:[]),
     seqModeles: (typeof seqModeles!=='undefined'?seqModeles:[]),
     referentiel: (typeof loadRef==='function'?loadRef():{}),
@@ -799,6 +812,7 @@ function importData(e){
       if(!confirm('Importer ces données ? Cela remplacera les données actuelles de la section (JSP, séances, sport, concours, formation, cours...).')) return;
       JSPs = data.jsps||[]; seances = data.seances||[]; sports = data.sports||[];
       concours = data.concours||[]; notesMan = data.notesman||[]; cours = data.cours||[];
+      controles = data.controles||[];
       if(data.seqPlanif) seqPlanif = data.seqPlanif;
       if(data.seqModeles) seqModeles = data.seqModeles;
       if(data.referentiel && typeof saveRef==='function') saveRef(data.referentiel);
@@ -816,7 +830,7 @@ function importData(e){
 function resetSection(){
   if(!confirm('Effacer TOUTES les données de la section "'+sections.find(s=>s.id===currentSectionId).nom+'" ?')) return;
   if(!confirm('Vraiment sûr ? Cette action est irréversible.')) return;
-  JSPs=[];seances=[];sports=[];concours=[];notesMan=[];seqPlanif=[];seqModeles=JSON.parse(JSON.stringify(MODELES_DEFAUT));
+  JSPs=[];seances=[];sports=[];concours=[];notesMan=[];controles=[];seqPlanif=[];seqModeles=JSON.parse(JSON.stringify(MODELES_DEFAUT));
   saveSeqData(); save(); closeSettings(); renderAll();
 }
 

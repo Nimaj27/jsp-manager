@@ -655,6 +655,10 @@ function getCalEvents(){
   sports.forEach(function(s){
     add(s.date,'sport',s.epreuve||'Sport','#7c3aed',s);
   });
+  // Contrôle de connaissances
+  controles.forEach(function(c){
+    add(c.date,'controle',c.theme||'Contrôle','#0891b2',c);
+  });
   return evts;
 }
 
@@ -747,7 +751,7 @@ function renderCalDetail(dateStr){
   el.innerHTML = '<div style="font-weight:700;font-size:13px;margin-bottom:8px;color:var(--txt)">'+dCap+'</div>'
     +'<div style="display:flex;flex-direction:column;gap:6px;">'
     +dayEvts.map(function(e){
-      var icon = {seance:'📅',planif:'📝',concours:'🏆',sport:'🏅'}[e.type]||'📌';
+      var icon = {seance:'📅',planif:'📝',concours:'🏆',sport:'🏅',controle:'📋'}[e.type]||'📌';
       var detail = '';
       if(e.type==='seance'){
         var np=(e.ref.presents||[]).length;
@@ -765,6 +769,9 @@ function renderCalDetail(dateStr){
       } else if(e.type==='sport'){
         var nb=Object.keys(e.ref.resultats||{}).length;
         detail = '<span style="font-size:11px;color:var(--txt-muted)">'+nb+' JSP évalué'+(nb>1?'s':'')+'</span>';
+      } else if(e.type==='controle'){
+        var nbc=Object.keys(e.ref.resultats||{}).length;
+        detail = '<span style="font-size:11px;color:var(--txt-muted)">'+nbc+' note'+(nbc>1?'s':'')+' · seuil '+(e.ref.seuil!=null?e.ref.seuil:10)+'/20</span>';
       }
       return '<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px;background:var(--card);border-radius:8px;border-left:3px solid '+e.color+'">'
         +'<span style="font-size:18px;flex-shrink:0">'+icon+'</span>'

@@ -24,6 +24,7 @@ let seances  = [];
 let sports   = [];
 let concours = [];
 let cours    = [];
+let controles = [];
 let _presenceDocsCache = []; // derniers docs de sections/{id}/presences reçus
 
 // ── Cache localStorage (fallback hors-ligne) ────────────────
@@ -34,6 +35,7 @@ function saveCache(){
   localStorage.setItem(k('concours'), JSON.stringify(concours));
   localStorage.setItem(k('notesman'), JSON.stringify(notesMan));
   localStorage.setItem(k('cours'),    JSON.stringify(cours));
+  localStorage.setItem(k('controles'),JSON.stringify(controles));
 }
 function loadFromCache(){
   JSPs     = JSON.parse(localStorage.getItem(k('jsps'))     || '[]');
@@ -42,6 +44,7 @@ function loadFromCache(){
   concours = JSON.parse(localStorage.getItem(k('concours')) || '[]');
   notesMan = JSON.parse(localStorage.getItem(k('notesman')) || '[]');
   cours    = JSON.parse(localStorage.getItem(k('cours'))    || '[]');
+  controles= JSON.parse(localStorage.getItem(k('controles'))|| '[]');
 }
 function loadData(){ loadFromCache(); }
 
@@ -59,6 +62,7 @@ async function save(){
       concours:  concours,
       notesman:  notesMan,
       cours:     cours,
+      controles: controles,
       seqPlanif:  (typeof seqPlanif  !== 'undefined' ? seqPlanif  : []),
       seqModeles: (typeof seqModeles !== 'undefined' ? seqModeles : []),
       referentiel: (typeof loadRef  === 'function' ? loadRef()  : {}),
@@ -178,6 +182,7 @@ function subscribeFirebase(){
     concours   = d.concours  || [];
     notesMan   = d.notesman  || [];
     cours      = d.cours     || [];
+    controles  = d.controles || [];
     if(d.seqPlanif)   seqPlanif  = d.seqPlanif;
     if(d.seqModeles)  seqModeles = d.seqModeles;
     if(d.referentiel) saveRef(d.referentiel);
@@ -409,6 +414,7 @@ function showTab(tab){
   if(tab==='manoeuvre') renderSequenceur();
   if(tab==='formation') renderFormation();
   if(tab==='cours')     renderCours();
+  if(tab==='controle')  renderControle();
   if(tab==='suivi'){    renderSuivi(); showVTab('stats'); }
 }
 
