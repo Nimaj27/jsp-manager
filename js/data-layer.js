@@ -89,7 +89,7 @@ async function publishPublicCours(){
   try {
     await setDoc(doc(db, 'public_cours', SECTION_ID), {
       cours: cours,
-      jsps: JSPs.filter(j=>j.statut!=='Licencié').map(j=>({id:j.id, prenom:j.prenom, pin:j.pin||''})),
+      jsps: JSPs.filter(j=>j.statut!=='Licencié').map(j=>({id:j.id, nom:j.nom, prenom:j.prenom, pin:j.pin||''})),
       updatedAt: new Date().toISOString(),
     });
   } catch(e){ console.warn('Publish cours public error:', e.message); }
