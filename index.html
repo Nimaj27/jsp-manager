@@ -1283,6 +1283,11 @@
 </div>
 
 <div class="save-ind" id="save-ind">✓ Sauvegardé</div>
+<div class="save-error-banner" id="save-error-banner">
+  <span id="save-error-text"></span>
+  <button onclick="retrySave()">🔄 Réessayer</button>
+  <button class="save-error-dismiss" onclick="dismissSaveError()">✕</button>
+</div>
 <script src="js/data-layer.js"></script>
 <script src="js/jsp-page.js"></script>
 <script src="js/seances-timeline.js"></script>

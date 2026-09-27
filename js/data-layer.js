@@ -49,10 +49,17 @@ function loadFromCache(){
 function loadData(){ loadFromCache(); }
 
 // ── Sauvegarde Firebase ─────────────────────────────────────
+// _saveFailed : vrai tant que la dernière écriture Firestore a échoué.
+// Tant que c'est le cas, subscribeFirebase() n'applique plus les
+// snapshots reçus (voir plus bas) : sinon, l'ancienne version du
+// document côté serveur écraserait silencieusement les modifications
+// locales non encore sauvegardées dès la prochaine synchronisation
+// temps réel (la sienne ou celle d'un autre utilisateur).
+let _saveFailed = false;
+
 async function save(){
-  showSaveInd();
   saveCache();
-  if(!window._fb || !window._fbUser) return;
+  if(!window._fb || !window._fbUser){ showSaveInd(); return; }
   const {db, doc, setDoc} = window._fb;
   try {
     await setDoc(doc(db, 'sections', SECTION_ID), {
@@ -70,13 +77,38 @@ async function save(){
       updatedAt: new Date().toISOString(),
       updatedBy: window._fbUser.email,
     });
+    _saveFailed = false;
+    showSaveInd();
+    dismissSaveError();
     publishPublicCours();
     publishPublicPlanning();
     publishPublicControles();
   } catch(e){
     console.warn('Firebase save error:', e.message);
-    showToast('⚠️ Sauvegardé localement (sync échouée)');
+    _saveFailed = true;
+    showSaveError(e.message);
   }
+}
+
+// ── Alerte persistante d'échec de sauvegarde ────────────────────────
+// Volontairement plus visible/insistante qu'un simple toast (qui
+// disparaît en 2s et peut passer inaperçu) : tant que la sauvegarde
+// n'a pas réussi, les données saisies ne sont présentes que sur cet
+// appareil et seraient perdues à la prochaine synchronisation.
+function showSaveError(msg){
+  const el = document.getElementById('save-error-banner');
+  if(!el) return;
+  document.getElementById('save-error-text').textContent =
+    '⚠️ Échec de la sauvegarde en ligne — vos dernières modifications ne sont enregistrées que sur cet appareil pour l\'instant. ('+msg+')';
+  el.style.display = 'flex';
+}
+function dismissSaveError(){
+  const el = document.getElementById('save-error-banner');
+  if(el) el.style.display = 'none';
+}
+function retrySave(){
+  dismissSaveError();
+  save();
 }
 
 // ── Miroir public restreint pour l'onglet Cours de jsp_public.html ─
@@ -204,6 +236,11 @@ function subscribeFirebase(){
   _fbUnsubscribers = [];
   const unsub = onSnapshot(doc(db, 'sections', SECTION_ID), function(snap){
     if(!snap.exists()) return;
+    // Une sauvegarde locale a échoué et n'a pas encore réussi depuis :
+    // ignorer ce snapshot (probablement l'ancienne version côté serveur)
+    // pour ne pas écraser les modifications en attente. Le bandeau
+    // d'erreur affiché (showSaveError) invite à réessayer.
+    if(_saveFailed) return;
     const d = snap.data();
     // Ne pas écraser si c'est notre propre sauvegarde (même utilisateur < 2s)
     JSPs       = d.jsps      || [];

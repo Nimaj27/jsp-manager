@@ -195,6 +195,12 @@ table.tbl tr:hover td{background:var(--card);}
 .save-ind{position:fixed;bottom:16px;right:16px;background:var(--sdis-bleu);color:#fff;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transform:translateY(10px);transition:all .3s;z-index:200;pointer-events:none;}
 .save-ind.show{opacity:1;transform:translateY(0);}
 
+/* ══ SAVE ERROR BANNER ══ */
+.save-error-banner{display:none;position:fixed;top:0;left:0;right:0;background:var(--danger);color:#fff;padding:10px 16px;font-size:13px;font-weight:600;z-index:500;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,.3);}
+.save-error-banner span{flex:1;min-width:200px;}
+.save-error-banner button{background:#fff;color:var(--danger);border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;}
+.save-error-banner button.save-error-dismiss{background:transparent;color:#fff;font-size:16px;padding:0 6px;}
+
 /* ══ SETTINGS PANEL ══ */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90;}
 .overlay.open{display:block;}
