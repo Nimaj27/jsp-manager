@@ -134,6 +134,17 @@ async function publishPublicControles(){
   } catch(e){ console.warn('Publish controles public error:', e.message); }
 }
 
+// ── Republication manuelle des miroirs publics ──────────────────────
+// save() republie déjà ces miroirs à chaque modification, mais un
+// changement de code (ex: un nouveau champ ajouté au miroir) ne se
+// reflète sur un miroir déjà publié qu'à la prochaine sauvegarde : ce
+// bouton permet de forcer la republication sans attendre une
+// modification de données.
+async function republierPagesPubliques(){
+  await Promise.all([publishPublicCours(), publishPublicPlanning(), publishPublicControles()]);
+  showToast('✅ Pages publiques republiées');
+}
+
 // ── Présences de séance (sous-collection séparée) ───────────
 // Isolées de sections/{id} pour que les règles Firestore puissent
 // autoriser le rôle 'aide' à écrire uniquement les présences, sans lui
