@@ -283,7 +283,11 @@ table.tbl tr:hover td{background:var(--card);}
   .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
   table.tbl{font-size:12px;}
   table.tbl th,table.tbl td{padding:6px 8px;}
-  table.tbl th:nth-child(3),table.tbl td:nth-child(3){display:none;}
+  /* Colonne "Statut" du tableau JSP uniquement — cette règle était
+     globale à tous les .tbl et masquait aussi la 3ᵉ colonne d'autres
+     tableaux (résultats ICP, contrôles, classements sport...) sur les
+     téléphones en portrait, sans que rien ne l'indique. */
+  #jsp-list-table th:nth-child(3),#jsp-list-table td:nth-child(3){display:none;}
   /* Sous-onglets */
   .ctab{padding:8px 10px;font-size:11px;white-space:nowrap;}
   /* Filtres */
