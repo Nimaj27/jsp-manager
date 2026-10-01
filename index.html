@@ -143,17 +143,27 @@
 <script src="js/pwa-install.js"></script>
 
 <!-- ══════════ TABS ══════════ -->
+<!-- Navigation regroupée en 4 catégories (Accueil, Jeunes, Activités, Suivi)
+     plutôt qu'une liste à plat de 10 onglets. Les onglets de destination
+     (data-tab + showTab(...)) sont inchangés : seul leur regroupement visuel
+     change, voir selectNavGroup()/syncNavGroups() dans data-layer.js. -->
 <div class="tabs">
   <div class="tab active" data-tab="accueil" onclick="showTab('accueil')">🏠 Accueil</div>
+  <div class="tab-group" data-group="jeunes" onclick="selectNavGroup('jeunes')">👥 Jeunes</div>
+  <div class="tab-group" data-group="activites" onclick="selectNavGroup('activites')">📅 Activités</div>
+  <div class="tab" data-tab="suivi" onclick="showTab('suivi')">📊 Suivi</div>
+</div>
+<div class="tabs-sub" data-group="jeunes" style="display:none">
   <div class="tab" data-tab="jsp" onclick="showTab('jsp')">👤 JSP</div>
-  <div class="tab" data-tab="seances" onclick="showTab('seances')">📅 Séances</div>
-  <div class="tab" data-tab="sport" onclick="showTab('sport')">🏃 Sport</div>
-  <div class="tab" data-tab="concours" onclick="showTab('concours')">🏆 Concours</div>
-  <div class="tab" data-tab="manoeuvre" onclick="showTab('manoeuvre')">📝 Séquenceur</div>
   <div class="tab" data-tab="formation" onclick="showTab('formation')">🎓 Formation</div>
   <div class="tab" data-tab="controle" onclick="showTab('controle')">📋 Contrôle</div>
   <div class="tab" data-tab="cours" onclick="showTab('cours')">📚 Cours</div>
-  <div class="tab" data-tab="suivi" onclick="showTab('suivi')">📊 Suivi</div>
+</div>
+<div class="tabs-sub" data-group="activites" style="display:none">
+  <div class="tab" data-tab="seances" onclick="showTab('seances')">📅 Séances</div>
+  <div class="tab" data-tab="sport" onclick="showTab('sport')">🏃 Sport</div>
+  <div class="tab" data-tab="concours" onclick="showTab('concours')">🏆 Concours</div>
+  <div class="tab" data-tab="manoeuvre" onclick="showTab('manoeuvre')">📝 Manœuvre</div>
 </div>
 
 <!-- ══════════ PAGE ACCUEIL ══════════ -->
