@@ -358,22 +358,15 @@ function calcScoreTotal(scores){
   );
 }
 
-function renderJspAnnee(){
-  var saison = document.getElementById('suivi-filter-saison').value || getSaison();
-  var el = document.getElementById('jspannee-content');
+// Classement complet "JSP de l'année" pour une saison — factorisé pour être
+// réutilisé à la fois par renderJspAnnee() et par le profil JSP unifié
+// (badge de podium + score/100 sur la fiche d'un JSP).
+function calcJspAnneeRanking(saison){
   var actifs = JSPs.filter(function(j){return j.statut==='Actif';});
-
-  if(!actifs.length){
-    el.innerHTML='<div class="empty"><div class="empty-icon">🏅</div>Aucun JSP actif.</div>';
-    return;
-  }
-
-  // Charger votes existants
+  if(!actifs.length) return [];
   var votes = JSON.parse(localStorage.getItem(k('jspannee_votes_'+saison))||'{}');
-
-  // Calculer scores auto pour tous
   var allIds = actifs.map(function(j){return j.id;});
-  var ranking = actifs.map(function(j){
+  return actifs.map(function(j){
     var sc = calcScoreAutoJsp(j.id, saison);
     sc.sport = calcScoreSportRelJsp(j.id, saison, allIds);
     sc.total = calcScoreTotal(sc);
@@ -387,7 +380,20 @@ function renderJspAnnee(){
       : sc.total;
     return {j:j, sc:sc};
   }).sort(function(a,b){return b.sc.scoreFinal - a.sc.scoreFinal;});
+}
 
+function renderJspAnnee(){
+  var saison = document.getElementById('suivi-filter-saison').value || getSaison();
+  var el = document.getElementById('jspannee-content');
+  var actifs = JSPs.filter(function(j){return j.statut==='Actif';});
+
+  if(!actifs.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">🏅</div>Aucun JSP actif.</div>';
+    return;
+  }
+
+  var votes = JSON.parse(localStorage.getItem(k('jspannee_votes_'+saison))||'{}');
+  var ranking = calcJspAnneeRanking(saison);
   var top1 = ranking[0];
   var podiumColors = ['#e8a020','#94a3b8','#b45309'];
   var medals = ['🥇','🥈','🥉'];

@@ -379,32 +379,55 @@ function openTimeline(jspId){
   var saison = getSaison();
   document.getElementById('timeline-titre').textContent = j.nom + ' ' + j.prenom;
   document.getElementById('timeline-print-btn').onclick = function(){ printFiche(jspId); };
+  document.getElementById('timeline-edit-btn').onclick = function(){
+    closeModal('modal-timeline');
+    openJSPModal(jspId);
+  };
 
-  // KPIs
-  var assid = getAssiduite(jspId, saison);
-  var assidCol = assid===null?'var(--txt-muted)':assid>=80?'var(--ok)':assid>=50?'var(--warn)':'var(--danger)';
-  var nbSeances = seances.filter(function(s){return s.saison===saison;}).length;
-  var nbPres = seances.filter(function(s){return s.saison===saison&&(s.presents||[]).includes(jspId);}).length;
-  var myConc = concours.filter(function(c){return (c.equipe||[]).includes(jspId);}).length;
+  // Avatar (initiales)
+  var initials = ((j.nom||'?')[0]||'')+((j.prenom||'?')[0]||'');
+  var avatarEl = document.getElementById('timeline-avatar');
+  avatarEl.style.background = stringToColor(j.nom+j.prenom);
+  avatarEl.textContent = initials.toUpperCase();
+
+  // Badges : cycle, statut, podium "JSP de l'année" si top 3
   var ref = loadRef(); var evals = loadEvals();
   var allComps = CYCLES.reduce(function(acc,cy){return acc+(ref[cy]||[]).length;},0);
   var valComps = CYCLES.reduce(function(acc,cy){
     return acc+(ref[cy]||[]).filter(function(c,idx){var e=evals[evalKey(jspId,cy,idx)];return isCompValide(e);}).length;
   },0);
   var progPct = allComps?Math.round(valComps/allComps*100):0;
-  loadNotesMan();
-  var myNotes = notesMan.filter(function(n){return n.jspId===jspId&&n.note!==null;});
-  var moyNote = myNotes.length?Math.round(myNotes.reduce(function(a,n){return a+n.note;},0)/myNotes.length*10)/10:null;
-  var myControlesKpi = controles.filter(function(c){return c.resultats&&c.resultats[jspId]!==undefined;});
-  var moyControle = myControlesKpi.length?Math.round(myControlesKpi.reduce(function(a,c){return a+c.resultats[jspId];},0)/myControlesKpi.length*10)/10:null;
 
+  var scoreVal = null, podiumBadge = '';
+  if(typeof calcJspAnneeRanking==='function'){
+    var ranking = calcJspAnneeRanking(saison);
+    var rankIdx = ranking.findIndex(function(r){return r.j.id===jspId;});
+    if(rankIdx>=0){
+      scoreVal = ranking[rankIdx].sc.scoreFinal;
+      if(rankIdx<3){
+        var medals=['🥇','🥈','🥉'], ordinaux=['1er','2e','3e'];
+        podiumBadge = '<span class="badge" style="background:var(--sdis-or);color:#06091a;font-weight:700">'+medals[rankIdx]+' '+ordinaux[rankIdx]+' — JSP de l\'année</span>';
+      }
+    }
+  }
+  if(scoreVal===null){
+    var scSolo = calcScoreAutoJsp(jspId, saison);
+    scSolo.sport = calcScoreSportRelJsp(jspId, saison, [jspId]);
+    scoreVal = calcScoreTotal(scSolo);
+  }
+
+  document.getElementById('timeline-badges').innerHTML =
+    '<span class="badge badge-blue">'+esc(j.section||'—')+'</span>'
+    +'<span class="badge '+(j.statut==='Actif'?'badge-green':'badge-gray')+'">'+esc(j.statut)+'</span>'
+    +podiumBadge;
+
+  // KPIs — resserrés sur l'essentiel (voir maquette : revue UX)
+  var assid = getAssiduite(jspId, saison);
+  var assidCol = assid===null?'var(--txt-muted)':assid>=80?'var(--ok)':assid>=50?'var(--warn)':'var(--danger)';
   document.getElementById('timeline-kpi').innerHTML =
     '<div class="kpi"><div class="kpi-v" style="color:'+assidCol+'">'+(assid!==null?assid+'%':'—')+'</div><div class="kpi-l">Assiduité</div></div>'+
-    '<div class="kpi"><div class="kpi-v">'+nbPres+'/'+nbSeances+'</div><div class="kpi-l">Présences</div></div>'+
-    '<div class="kpi"><div class="kpi-v">'+myConc+'</div><div class="kpi-l">Concours</div></div>'+
-    '<div class="kpi"><div class="kpi-v">'+progPct+'%</div><div class="kpi-l">Formation</div></div>'+
-    '<div class="kpi"><div class="kpi-v">'+(moyNote!==null?moyNote+'/20':'—')+'</div><div class="kpi-l">Moy. manœuvre</div></div>'+
-    '<div class="kpi"><div class="kpi-v">'+(moyControle!==null?moyControle+'/20':'—')+'</div><div class="kpi-l">Moy. contrôle</div></div>';
+    '<div class="kpi"><div class="kpi-v" style="color:var(--sdis-bleu)">'+progPct+'%</div><div class="kpi-l">Formation validée</div></div>'+
+    '<div class="kpi"><div class="kpi-v" style="color:var(--sdis-or)">'+scoreVal+'</div><div class="kpi-l">Score / 100</div></div>';
 
   // Alertes individuelles
   renderAlerteJsp(jspId, 'timeline-alertes');
@@ -412,13 +435,111 @@ function openTimeline(jspId){
   // Brevets
   renderBrevets(jspId, 'timeline-brevets');
 
+  // Assiduité : visuel des dernières séances
+  renderAssiduiteBar(jspId, saison, 'timeline-assiduite');
+
+  // Formation détaillée par cycle
+  renderFormationParCycle(jspId, 'timeline-formation-cycle');
+
+  // Dernières notes de manœuvre
+  renderDernieresNotesMano(jspId, 'timeline-notes-mano');
+
   // Contrôles récents + meilleurs résultats sport (vue unifiée)
   renderControleSport(jspId, 'timeline-controle-sport');
 
-  // Timeline événements
+  // Historique complet (replié par défaut, voir toggleTimelineHistorique)
+  document.getElementById('timeline-content').style.display = 'none';
+  document.getElementById('timeline-historique-toggle').textContent = "📜 Voir l'historique complet ▾";
   renderTimelineEvents(jspId);
 
   document.getElementById('modal-timeline').classList.add('open');
+}
+
+function toggleTimelineHistorique(){
+  var el = document.getElementById('timeline-content');
+  var btn = document.getElementById('timeline-historique-toggle');
+  var open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : '';
+  btn.textContent = open ? "📜 Voir l'historique complet ▾" : "📜 Masquer l'historique ▲";
+}
+
+// Dernières séances (dans l'ordre chronologique) pour visualiser l'assiduité
+// en un coup d'œil, sans avoir à ouvrir l'onglet Séances (revue UX).
+function renderAssiduiteBar(jspId, saison, elId){
+  var el = document.getElementById(elId);
+  if(!el) return;
+  var today = new Date().toISOString().slice(0,10);
+  var passees = seances.filter(function(s){return s.saison===saison && s.date<=today;})
+    .sort(function(a,b){return a.date.localeCompare(b.date);});
+  var last = passees.slice(-6);
+
+  if(!last.length){
+    el.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">📆 Assiduité</div>'
+      +'<div style="font-size:12px;color:var(--txt-muted)">Aucune séance enregistrée.</div>';
+    return;
+  }
+  var nbPres = last.filter(function(s){return (s.presents||[]).includes(jspId);}).length;
+  var squares = last.map(function(s){
+    var pres = (s.presents||[]).includes(jspId);
+    var d = new Date(s.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+    return '<div title="'+d+' — '+(pres?'Présent':'Absent')+'" style="width:28px;height:28px;border-radius:6px;background:'+(pres?'var(--ok)':'var(--danger)')+'"></div>';
+  }).join('');
+
+  el.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">📆 Assiduité</div>'
+    +'<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm)">'
+    +'<div style="display:flex;gap:4px">'+squares+'</div>'
+    +'<span style="font-size:13px">'+nbPres+'/'+last.length+' dernières séances présentes</span>'
+    +'</div>';
+}
+
+// Formation détaillée par cycle (JSP1 → JSP4), plutôt qu'un seul % global,
+// pour voir immédiatement où en est le JSP dans sa progression (revue UX).
+function renderFormationParCycle(jspId, elId){
+  var el = document.getElementById(elId);
+  if(!el) return;
+  var ref = loadRef(); var evals = loadEvals();
+  var cycles = CYCLES.filter(function(cy){return (ref[cy]||[]).length;});
+  if(!cycles.length){ el.innerHTML=''; return; }
+
+  var rows = cycles.map(function(cy){
+    var total = (ref[cy]||[]).length;
+    var val = (ref[cy]||[]).filter(function(c,idx){var e=evals[evalKey(jspId,cy,idx)];return isCompValide(e);}).length;
+    var pct = total?Math.round(val/total*100):0;
+    return '<div style="padding:8px 0;border-bottom:1px solid var(--border)">'
+      +'<div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px"><strong>'+esc(cy)+'</strong><span style="color:var(--txt-muted)">'+val+' / '+total+'</span></div>'
+      +'<div style="height:6px;background:var(--border);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:var(--sdis-bleu)"></div></div>'
+      +'</div>';
+  }).join('');
+
+  el.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">🎓 Formation — par cycle</div>'
+    +rows;
+}
+
+// Dernières notes de manœuvre (liste courte), en complément de la moyenne
+// déjà visible dans les KPIs — pour voir l'évolution récente (revue UX).
+function renderDernieresNotesMano(jspId, elId){
+  var el = document.getElementById(elId);
+  if(!el) return;
+  loadNotesMan();
+  var mine = notesMan.filter(function(n){return n.jspId===jspId && n.note!==null;})
+    .sort(function(a,b){return (b.date||'').localeCompare(a.date||'');}).slice(0,3);
+
+  if(!mine.length){ el.innerHTML=''; return; }
+
+  var rows = mine.map(function(n){
+    var src = n.type==='seance'
+      ? seances.find(function(s){return s.id===n.refId;})
+      : concours.find(function(c){return c.id===n.refId;});
+    var label = src?(src.theme||src.type||src.titre||'Manœuvre'):'Manœuvre';
+    var d = n.date ? new Date(n.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) : '—';
+    var col = n.note>=14?'var(--ok)':n.note>=10?'var(--warn)':'var(--danger)';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">'
+      +'<span style="font-size:12.5px">'+esc(d)+' — '+esc(label)+'</span>'
+      +'<strong style="font-size:13px;color:'+col+'">'+n.note+'/20</strong></div>';
+  }).join('');
+
+  el.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">📝 Dernières notes de manœuvre</div>'
+    +rows;
 }
 
 function renderBrevets(jspId, elId){
@@ -489,7 +610,7 @@ function renderControleSport(jspId, elId){
 
   el.innerHTML = '<div style="display:flex;gap:16px;flex-wrap:wrap">'
     +'<div style="flex:1;min-width:220px">'
-    +'<div style="font-size:11px;font-weight:700;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">📋 Contrôles récents</div>'
+    +'<div style="font-size:11px;font-weight:700;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">📋 Contrôles de connaissances</div>'
     +controleHtml
     +'</div>'
     +'<div style="flex:1;min-width:220px">'
