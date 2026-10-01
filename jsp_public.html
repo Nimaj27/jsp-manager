@@ -21,10 +21,6 @@
     header img{width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--sdis-or);}
     .header-text h1{font-size:17px;font-weight:700;color:var(--sdis-or);}
     .header-text p{font-size:11px;color:var(--txt-muted);}
-    .badge-live{margin-left:auto;background:#16a34a;color:#fff;font-size:10px;font-weight:700;
-      padding:3px 8px;border-radius:10px;display:flex;align-items:center;gap:4px;}
-    .badge-live::before{content:'';width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse 1.5s infinite;}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
     /* Contenu */
     .container{max-width:640px;margin:0 auto;padding:20px 16px;}
@@ -86,6 +82,14 @@
       font-size:13px;font-weight:600;padding:10px;border-radius:var(--radius-sm);cursor:pointer;
       display:flex;align-items:center;justify-content:center;gap:6px;}
     .tab-btn.active{background:var(--sdis-bleu);color:#fff;border-color:var(--sdis-bleu);}
+    .tab-lock{font-size:10px;margin-left:2px;}
+
+    /* Bannière d'identité (une fois le PIN validé — partagée Cours/Contrôles,
+       voir changeIdentity() : évite de redemander le code en changeant d'onglet) */
+    .auth-banner{display:flex;align-items:center;gap:9px;background:rgba(22,163,74,.1);
+      border:1px solid rgba(22,163,74,.3);border-radius:var(--radius);padding:11px 14px;margin-bottom:14px;}
+    .auth-banner span.who{flex:1;font-size:12.5px;font-weight:600;}
+    .auth-banner a{font-size:10.5px;color:#7ab5f5;text-decoration:underline;flex-shrink:0;}
 
     /* Écran PIN */
     .pin-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
@@ -118,13 +122,12 @@
     <h1>JSP Pacy-sur-Eure</h1>
     <p>Jeunes Sapeurs-Pompiers — SDIS 27</p>
   </div>
-  <div class="badge-live">En direct</div>
 </header>
 
 <div class="tabs-public">
   <button class="tab-btn active" id="tab-btn-planning" onclick="showPublicTab('planning')">📅 Planning</button>
-  <button class="tab-btn" id="tab-btn-cours" onclick="showPublicTab('cours')">📚 Cours</button>
-  <button class="tab-btn" id="tab-btn-controles" onclick="showPublicTab('controles')">📋 Contrôles</button>
+  <button class="tab-btn" id="tab-btn-cours" onclick="showPublicTab('cours')">📚 Cours <span class="tab-lock" id="lock-cours">🔒</span></button>
+  <button class="tab-btn" id="tab-btn-controles" onclick="showPublicTab('controles')">📋 Contrôles <span class="tab-lock" id="lock-controles">🔒</span></button>
 </div>
 <div class="container">
   <div id="tab-planning">
@@ -274,6 +277,54 @@ function esc(s){
     ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 }
 
+// ── Identité mémorisée sur l'appareil ──────────────────────────────────
+// Évite de redemander le code PIN à chaque visite (friction identifiée en
+// revue UX) : une fois validé, {id, pin} est gardé en local, revérifié à
+// chaque chargement des données publiques (si le JSP a été retiré ou le
+// PIN changé, l'identité est automatiquement oubliée).
+const AUTH_KEY = 'jsp_public_auth_pacy';
+
+function saveAuth(jsp){
+  try{ localStorage.setItem(AUTH_KEY, JSON.stringify({id:jsp.id, pin:jsp.pin})); }catch(e){}
+}
+function loadAuth(){
+  try{ return JSON.parse(localStorage.getItem(AUTH_KEY)||'null'); }catch(e){ return null; }
+}
+function clearAuth(){
+  try{ localStorage.removeItem(AUTH_KEY); }catch(e){}
+}
+
+function tryAutoUnlock(){
+  if(coursUnlockedJsp || !coursPublicData) return;
+  const saved = loadAuth();
+  if(!saved) return;
+  const j = (coursPublicData.jsps||[]).find(x => String(x.id) === String(saved.id));
+  if(j && j.pin && j.pin === saved.pin) coursUnlockedJsp = j;
+  else clearAuth();
+}
+
+function updateTabLocks(){
+  const show = coursUnlockedJsp ? 'none' : '';
+  document.getElementById('lock-cours').style.display = show;
+  document.getElementById('lock-controles').style.display = show;
+}
+
+function renderAuthBanner(){
+  return `<div class="auth-banner">
+    <span>👋</span>
+    <span class="who">Bonjour ${esc(coursUnlockedJsp.prenom)} — pas besoin de recoder entre les onglets</span>
+    <a href="javascript:void(0)" onclick="changeIdentity()">Pas toi ?</a>
+  </div>`;
+}
+
+window.changeIdentity = function(){
+  coursUnlockedJsp = null;
+  clearAuth();
+  updateTabLocks();
+  renderCoursPinScreen();
+  renderControlesTab();
+};
+
 function renderCoursPinScreen(){
   const jsps = (coursPublicData.jsps||[]).slice().sort((a,b)=>(a.nom||'').localeCompare(b.nom||'') || a.prenom.localeCompare(b.prenom));
   coursContent.innerHTML = `
@@ -286,8 +337,9 @@ function renderCoursPinScreen(){
       <input type="text" id="pin-code" maxlength="4" inputmode="numeric" placeholder="Code PIN">
       <button id="pin-submit">Voir les cours</button>
       <div class="pin-error" id="pin-error"></div>
+      <div style="font-size:10.5px;color:var(--txt-muted);margin-top:4px">Une fois identifié, tu restes connecté sur cet appareil.</div>
     </div>`;
-  document.getElementById('pin-submit').onclick = () => {
+  const submit = () => {
     const jspId = document.getElementById('pin-jsp').value;
     const code = document.getElementById('pin-code').value.trim();
     const err = document.getElementById('pin-error');
@@ -295,9 +347,13 @@ function renderCoursPinScreen(){
     const j = (coursPublicData.jsps||[]).find(x => String(x.id) === jspId);
     if(!j || !j.pin || j.pin !== code){ err.textContent = 'Code incorrect'; return; }
     coursUnlockedJsp = j;
+    saveAuth(j);
+    updateTabLocks();
     renderCoursList();
     renderControlesTab();
   };
+  document.getElementById('pin-submit').onclick = submit;
+  document.getElementById('pin-code').onkeydown = (e) => { if(e.key === 'Enter') submit(); };
 }
 
 function renderCoursList(){
@@ -309,7 +365,7 @@ function renderCoursList(){
     return;
   }
 
-  let html = `<div class="section-title">Bonjour ${esc(coursUnlockedJsp.prenom)} 👋</div>`;
+  let html = renderAuthBanner();
   html += list.map(c => `
     <div class="cours-card">
       <span class="cours-badge">${esc(c.cycle||'Tous')}</span>
@@ -326,8 +382,11 @@ onSnapshot(doc(db, 'public_cours', 'pacy'), snap => {
     return;
   }
   coursPublicData = snap.data();
+  tryAutoUnlock();
+  updateTabLocks();
   if(coursUnlockedJsp) renderCoursList();
   else renderCoursPinScreen();
+  renderControlesTab();
 }, err => {
   coursContent.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>Impossible de charger les cours.<br><small>' + err.message + '</small></div>';
 });
@@ -357,7 +416,7 @@ function renderControlesTab(){
     controlesContent.innerHTML = '<div class="empty"><div class="empty-icon">📋</div>Aucun sujet ou corrigé disponible pour le moment.</div>';
     return;
   }
-  let html = `<div class="section-title">Bonjour ${esc(coursUnlockedJsp.prenom)} 👋</div>`;
+  let html = renderAuthBanner();
   html += list.map(c => `
     <div class="cours-card">
       <div class="cours-titre">${esc(c.theme||'Contrôle')}</div>
