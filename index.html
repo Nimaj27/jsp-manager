@@ -124,10 +124,19 @@
     <h1 id="club-name">JSP Pacy-sur-Eure</h1>
     <span>Jeunes Sapeurs-Pompiers</span>
   </div>
-  <div class="hdr-divider"></div>
+  <!-- Navigation regroupée en 4 catégories (Accueil, Jeunes, Activités, Suivi)
+       intégrée directement dans le header. Les onglets de destination
+       (data-tab + showTab(...)) sont inchangés : seul leur regroupement visuel
+       change, voir selectNavGroup()/syncNavGroups() dans data-layer.js. -->
+  <nav class="hdr-nav">
+    <div class="tab active" data-tab="accueil" onclick="showTab('accueil')">🏠 Accueil</div>
+    <div class="tab-group" data-group="jeunes" onclick="selectNavGroup('jeunes')">👥 Jeunes</div>
+    <div class="tab-group" data-group="activites" onclick="selectNavGroup('activites')">📅 Activités</div>
+    <div class="tab" data-tab="suivi" onclick="showTab('suivi')">📊 Suivi</div>
+  </nav>
+  <div class="hdr-spacer"></div>
   <select class="hdr-sel" id="section-select" onchange="switchSection(this.value)"></select>
   <button class="hdr-btn" onclick="addSection()" title="Nouvelle section">＋</button>
-  <div class="hdr-spacer"></div>
   <button class="hdr-btn icon" id="theme-btn" onclick="toggleTheme()" title="Thème">🌙</button>
   <button class="hdr-btn icon" onclick="openSettings()" title="Paramètres">⚙️</button>
   <div id="user-badge" style="display:flex;align-items:center;gap:6px;padding:3px 8px;
@@ -142,17 +151,7 @@
 <script src="js/header-actions.js"></script>
 <script src="js/pwa-install.js"></script>
 
-<!-- ══════════ TABS ══════════ -->
-<!-- Navigation regroupée en 4 catégories (Accueil, Jeunes, Activités, Suivi)
-     plutôt qu'une liste à plat de 10 onglets. Les onglets de destination
-     (data-tab + showTab(...)) sont inchangés : seul leur regroupement visuel
-     change, voir selectNavGroup()/syncNavGroups() dans data-layer.js. -->
-<div class="tabs">
-  <div class="tab active" data-tab="accueil" onclick="showTab('accueil')">🏠 Accueil</div>
-  <div class="tab-group" data-group="jeunes" onclick="selectNavGroup('jeunes')">👥 Jeunes</div>
-  <div class="tab-group" data-group="activites" onclick="selectNavGroup('activites')">📅 Activités</div>
-  <div class="tab" data-tab="suivi" onclick="showTab('suivi')">📊 Suivi</div>
-</div>
+<!-- ══════════ SOUS-ONGLETS (apparaissent sous le header quand un groupe est ouvert) ══════════ -->
 <div class="tabs-sub" data-group="jeunes" style="display:none">
   <div class="tab" data-tab="jsp" onclick="showTab('jsp')">👤 JSP</div>
   <div class="tab" data-tab="formation" onclick="showTab('formation')">🎓 Formation</div>
