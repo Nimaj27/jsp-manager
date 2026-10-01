@@ -176,6 +176,12 @@ function renderAccueil(){
     var dStr = now.toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
     dateEl.textContent = dStr.charAt(0).toUpperCase()+dStr.slice(1);
   }
+  // Salutation personnalisée (reprend le prénom déjà affiché dans le badge utilisateur)
+  var greetEl = document.getElementById('accueil-greeting');
+  if(greetEl){
+    var prenomUser = (document.getElementById('user-name')||{}).textContent || '';
+    greetEl.textContent = prenomUser ? '👋 Bonjour '+prenomUser : '🏠 Tableau de bord';
+  }
 
   var el = document.getElementById('accueil-content');
   if(!el){ setTimeout(renderAccueil, 200); return; }
@@ -193,6 +199,11 @@ function renderAccueil(){
   var seancesSaison = seances.filter(function(s){return s.saison===saison;})
     .sort(function(a,b){return a.date.localeCompare(b.date);});
 
+  // ── 0. Section "Aujourd'hui" — ce qui demande une action passe
+  // avant les statistiques de la saison (revue UX : l'accueil
+  // informait sans jamais dire quoi faire en premier).
+  html += '<div style="grid-column:span 2;font-size:11px;font-weight:700;color:var(--sdis-or);text-transform:uppercase;letter-spacing:.06em;margin:4px 0 -4px;">📌 Aujourd\'hui</div>';
+
   // ── 1. Prochaine séance ─────────────────────────────────
   var prochaines = seances.filter(function(s){return s.date>=today;})
     .sort(function(a,b){return a.date.localeCompare(b.date);});
@@ -200,29 +211,66 @@ function renderAccueil(){
   var joursAvant = nextSeance ? Math.round((new Date(nextSeance.date)-now)/86400000) : null;
   var urgence = joursAvant===0?'var(--sdis-or)':joursAvant!==null&&joursAvant<=7?'var(--ok)':'var(--sdis-bleu)';
 
-  html += '<div class="stats-card" style="grid-column:span 2;border-left:4px solid '+urgence+';padding:16px;">'
-    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">'
-    +'<h3 style="margin:0;color:var(--sdis-or)">📅 Prochaine séance</h3>'
-    +(joursAvant!==null?'<span style="margin-left:auto;background:'+urgence+';color:'+(joursAvant===0?'var(--panel)':'#fff')+';font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;">'
-      +(joursAvant===0?'Aujourd\'hui !':joursAvant===1?'Demain':'Dans '+joursAvant+' j')+'</span>':'')
-    +'</div>';
+  html += '<div class="stats-card" style="grid-column:span 2;border:1px solid '+urgence+';padding:20px 22px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">';
 
   if(nextSeance){
     var dNext = new Date(nextSeance.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'});
     dNext = dNext.charAt(0).toUpperCase()+dNext.slice(1);
-    html += '<div style="font-size:17px;font-weight:700;margin-bottom:3px;">'+esc(nextSeance.theme||nextSeance.type||'Séance JSP')+'</div>'
-      +'<div style="font-size:13px;color:var(--txt-muted);margin-bottom:10px;">'+dNext+'</div>'
-      +'<div style="display:flex;gap:8px;flex-wrap:wrap;">'
-      +'<button class="btn btn-primary btn-sm" onclick="showTab(\'seances\')">📅 Séances</button>'
+    html += '<div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:5px;">'
+      +'<div style="display:flex;align-items:center;gap:10px;">'
+      +(joursAvant!==null?'<span style="background:'+urgence+';color:'+(joursAvant===0?'var(--panel)':'#fff')+';font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;">'
+        +(joursAvant===0?'Aujourd\'hui !':joursAvant===1?'Demain':'Dans '+joursAvant+' j')+'</span>':'')
+      +'<span style="font-size:12px;color:var(--txt-muted)">Prochaine séance</span>'
+      +'</div>'
+      +'<div style="font-size:20px;font-weight:800;">'+esc(nextSeance.theme||nextSeance.type||'Séance JSP')+'</div>'
+      +'<div style="font-size:13px;color:var(--txt-muted);">'+dNext+(nextSeance.heure?' · '+esc(nextSeance.heure):'')+'</div>'
+      +'</div>'
+      +'<div style="display:flex;gap:10px;">'
+      +'<button class="btn btn-ghost btn-sm" onclick="showTab(\'seances\')">📅 Séances</button>'
       +'<button class="btn btn-blue btn-sm" onclick="openConvocModal(\''+nextSeance.id+'\')">📲 Convoquer</button>'
       +'</div>';
   } else {
-    html += '<div style="color:var(--txt-muted);font-size:13px;">Aucune séance programmée.<br>'
-      +'<button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="openGenCalModal()">📆 Générer le calendrier</button></div>';
+    html += '<div style="flex:1;color:var(--txt-muted);font-size:13px;">Aucune séance programmée.</div>'
+      +'<button class="btn btn-primary btn-sm" onclick="openGenCalModal()">📆 Générer le calendrier</button>';
   }
   html += '</div>';
 
-  // ── 2. KPIs avec mini sparklines ────────────────────────
+  // ── 2. Alertes — agrégées par type (une ligne cliquable par type,
+  // pas une par JSP), reste dans la zone "Aujourd'hui" (actionnable),
+  // avant les statistiques de la saison ci-dessous.
+  var todayStr = today;
+  var nbAssidAlert = actifs.filter(function(j){var a=getAssiduite(j.id,saison); return a!==null&&a<60;}).length;
+  var nbCertifExpire = actifs.filter(function(j){return j.certifMed&&j.certifMed<todayStr;}).length;
+  var nbCertifBientot = actifs.filter(function(j){return j.certifMed&&j.certifMed>=todayStr&&j.certifMed<=addDaysStr(todayStr,90);}).length;
+  var nbControlesIncomplets = controles.filter(function(c){
+    return (!saison||c.saison===saison) && Object.keys(c.resultats||{}).length < nbActifs;
+  }).length;
+
+  var alertRows = [];
+  if(nbAssidAlert) alertRows.push({icon:'⚠️', color:'var(--danger)', tab:'jsp',
+    text:nbAssidAlert+' JSP en alerte d\'assiduité (&lt;60%) — à traiter avant le prochain bilan'});
+  if(nbControlesIncomplets) alertRows.push({icon:'📋', color:'var(--sdis-bleu)', tab:'controle',
+    text:nbControlesIncomplets+' contrôle'+(nbControlesIncomplets>1?'s':'')+' de connaissances avec des notes manquantes cette saison'});
+  if(nbCertifExpire) alertRows.push({icon:'🏥', color:'var(--danger)', tab:'jsp',
+    text:nbCertifExpire+' certificat'+(nbCertifExpire>1?'s':'')+' médical'+(nbCertifExpire>1?'aux':'')+' expiré'+(nbCertifExpire>1?'s':'')});
+  if(nbCertifBientot) alertRows.push({icon:'🏥', color:'var(--warn)', tab:'jsp',
+    text:nbCertifBientot+' certificat'+(nbCertifBientot>1?'s':'')+' médical'+(nbCertifBientot>1?'aux':'')+' à renouveler bientôt'});
+
+  html += alertRows.map(function(a){
+    return '<div onclick="showTab(\''+a.tab+'\')" style="grid-column:span 2;display:flex;align-items:center;gap:14px;'
+      +'background:var(--panel);border:1px solid var(--border);border-left:4px solid '+a.color+';border-radius:12px;'
+      +'padding:14px 18px;cursor:pointer;">'
+      +'<span style="font-size:18px">'+a.icon+'</span>'
+      +'<div style="flex:1;font-size:13.5px">'+a.text+'</div>'
+      +'<span style="color:var(--txt-muted);font-size:16px">›</span>'
+      +'</div>';
+  }).join('');
+
+  // ── 3. Section "Cette saison" — statistiques, en second plan
+  // visuel par rapport aux actions du jour ci-dessus.
+  html += '<div style="grid-column:span 2;font-size:11px;font-weight:700;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.06em;margin:6px 0 -4px;">📊 Cette saison</div>';
+
+  // ── 4. KPIs avec mini sparklines ────────────────────────
   var moyAssid = 0, assidArr = [];
   if(nbActifs && seancesSaison.length){
     assidArr = actifs.map(function(j){return getAssiduite(j.id,saison)||0;});
@@ -240,60 +288,14 @@ function renderAccueil(){
 
   var nbConcours = concours.filter(function(c){return c.saison===saison;}).length;
 
-  // Assiduité sur les 6 dernières séances (évolution)
-  var last6 = seancesSaison.slice(-6);
-  var assidTrend = last6.map(function(s){
-    if(!nbActifs) return 0;
-    return Math.round((s.presents||[]).length/nbActifs*100);
-  });
-
-  html += '<div class="stats-card" style="padding:14px;">'
-    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
-    +'<div><div style="font-size:28px;font-weight:800;color:'+assidCol+'">'+moyAssid+'%</div>'
-    +'<div style="font-size:10px;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.05em">Assiduité moy.</div></div>'
-    +miniSparkline(assidTrend, assidCol)
-    +'</div>'
-    +'<div style="font-size:11px;color:var(--txt-muted)">'+seancesSaison.length+' séances cette saison</div>'
-    +'<button class="btn btn-ghost btn-sm" style="margin-top:8px;font-size:11px;width:100%" onclick="showTab(\'suivi\')">Voir le suivi →</button>'
+  html += '<div style="grid-column:span 2;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;">'
+    +flatKpiTile(moyAssid+'%', 'Assiduité moy.', assidCol)
+    +flatKpiTile(nbActifs, 'JSP actifs')
+    +flatKpiTile(seancesSaison.length, 'Séances cette saison')
+    +flatKpiTile(moyForm+'%', 'Formation validée')
     +'</div>';
 
-  html += '<div class="stats-card" style="padding:14px;">'
-    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
-    +'<div><div style="font-size:28px;font-weight:800;color:var(--sdis-or)">'+moyForm+'%</div>'
-    +'<div style="font-size:10px;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.05em">Formation validée</div></div>'
-    +miniDonut(moyForm, 'var(--sdis-or)')
-    +'</div>'
-    +'<div style="font-size:11px;color:var(--txt-muted)">'+nbActifs+' JSP actifs</div>'
-    +'<button class="btn btn-ghost btn-sm" style="margin-top:8px;font-size:11px;width:100%" onclick="showTab(\'formation\')">Formation →</button>'
-    +'</div>';
-
-  // ── 3. Alertes ───────────────────────────────────────────
-  var alertes = [];
-  var todayStr = today;
-  actifs.forEach(function(j){
-    var a = getAssiduite(j.id, saison);
-    if(a!==null && a<60) alertes.push({icon:'⚠️',color:'var(--danger)',
-      text:esc(j.nom)+' '+esc(j.prenom)+' — Assiduité '+a+'%'});
-    if(j.certifMed && j.certifMed<todayStr) alertes.push({icon:'🏥',color:'var(--danger)',
-      text:esc(j.nom)+' '+esc(j.prenom)+' — Certificat médical expiré'});
-    else if(j.certifMed && j.certifMed<=addDaysStr(todayStr,90)) alertes.push({icon:'🏥',color:'var(--warn)',
-      text:esc(j.nom)+' '+esc(j.prenom)+' — Certif. médical expire bientôt'});
-  });
-
-  if(alertes.length){
-    html += '<div class="stats-card" style="grid-column:span 2;border-left:4px solid var(--danger);padding:14px;">'
-      +'<h3 style="margin-bottom:10px;color:var(--danger)">🚨 Alertes ('+alertes.length+')</h3>'
-      +'<div style="display:flex;flex-direction:column;gap:5px;">'
-      +alertes.slice(0,4).map(function(a){
-        return '<div onclick="showTab(\'jsp\')" style="display:flex;align-items:center;gap:8px;padding:6px 10px;'
-          +'background:var(--card);border-radius:6px;cursor:pointer;border-left:3px solid '+a.color+';font-size:12px;">'
-          +a.icon+' <span>'+a.text+'</span></div>';
-      }).join('')
-      +(alertes.length>4?'<div style="font-size:11px;color:var(--txt-muted);text-align:center;padding-top:4px">+'+(alertes.length-4)+' autres</div>':'')
-      +'</div></div>';
-  }
-
-  // ── 4. Sport — graphique barres mini ────────────────────
+  // ── 5. Sport — graphique barres mini ────────────────────
   var recentSports = sports.filter(function(s){return s.saison===saison;})
     .sort(function(a,b){return b.date.localeCompare(a.date);}).slice(0,1);
   if(recentSports.length){
@@ -325,7 +327,7 @@ function renderAccueil(){
       +'</div>';
   }
 
-  // ── 5. Prochain concours ────────────────────────────────
+  // ── 6. Prochain concours ────────────────────────────────
   var prochainConc = concours.filter(function(c){return c.date>=today;})
     .sort(function(a,b){return a.date.localeCompare(b.date);})[0];
   html += '<div class="stats-card" style="padding:14px;">';
@@ -347,19 +349,17 @@ function renderAccueil(){
   html += '<button class="btn btn-ghost btn-sm" style="margin-top:10px;font-size:11px;width:100%" onclick="showTab(\'concours\')">Concours →</button>'
     +'</div>';
 
-  // ── 6. Météo section — barre de progression visuelle ───
+  // ── 7. Météo section — barre de progression visuelle ───
   var nbBrevet = actifs.filter(function(j){return j.bnjsp;}).length;
   var nbCertifOK = actifs.filter(function(j){return j.certifMed && j.certifMed>=today;}).length;
   loadNotesMan();
   var nbNotes = notesMan.filter(function(n){return n.note!==null;}).length;
 
+  // Les tuiles JSP actifs/Séances/Assiduité/Formation sont déjà dans la
+  // rangée "Cette saison" ci-dessus : on ne les répète pas ici.
   html += '<div class="stats-card" style="grid-column:span 2;padding:14px;">'
-    +'<h3 style="margin-bottom:12px;color:var(--sdis-or)">📊 Météo de la section — '+saison+'</h3>'
+    +'<h3 style="margin-bottom:12px;color:var(--sdis-or)">📊 Autres indicateurs — '+saison+'</h3>'
     +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">'
-    +meteoTile('👤', 'JSP actifs', nbActifs, nbActifs, '', 'var(--sdis-bleu)')
-    +meteoTile('📅', 'Séances', seancesSaison.length, 30, ' séances', 'var(--sdis-bleu)')
-    +meteoTile('✅', 'Assiduité', moyAssid, 100, '%', assidCol)
-    +meteoTile('🎓', 'Formation', moyForm, 100, '%', 'var(--sdis-or)')
     +meteoTile('🏆', 'Concours', nbConcours, 5, '', 'var(--sdis-or)')
     +meteoTile('📋', 'Notes manœuvre', nbNotes, Math.max(nbNotes,1), '', 'var(--sdis-bleu)')
     +meteoTile('🏥', 'Certifs valides', nbCertifOK, nbActifs||1, '/'+nbActifs, nbCertifOK===nbActifs?'var(--ok)':'var(--warn)')
@@ -405,6 +405,16 @@ function miniDonut(pct, color){
     +'<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="4"'
     +' stroke-dasharray="'+dash.toFixed(1)+' '+circ.toFixed(1)+'" stroke-linecap="round"/>'
     +'</svg>';
+}
+
+// Tuile plate (chiffre + libellé, sans icône ni graphique) utilisée par
+// la rangée "Cette saison" de l'accueil, pour rester en retrait visuel
+// par rapport à la zone "Aujourd'hui" (revue UX).
+function flatKpiTile(value, label, color){
+  return '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">'
+    +'<div style="font-size:22px;font-weight:700;'+(color?'color:'+color+';':'')+'">'+value+'</div>'
+    +'<div style="font-size:11.5px;color:var(--txt-muted);margin-top:2px">'+label+'</div>'
+    +'</div>';
 }
 
 function meteoTile(icon, label, val, max, unit, color){
