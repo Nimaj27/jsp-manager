@@ -128,7 +128,13 @@ header{background:linear-gradient(135deg,#06091a 0%,#0a1030 60%,#0e1548 100%);bo
 /* ══ KPI CARDS ══ */
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:18px;}
 .kpi{background:var(--panel);border:1px solid var(--border);border-top:3px solid var(--sdis-bleu);border-radius:var(--radius);padding:14px;text-align:center;}
-.kpi-v{font-size:26px;font-weight:700;color:var(--sdis-or);line-height:1;}
+/* Neutre par défaut (revue UX — hiérarchie visuelle) : l'or était
+   appliqué à TOUTE statistique de l'appli (JSP actifs, séances,
+   présences...) sans distinction, écrasant les vraies mises en
+   évidence. Les valeurs qui ont un sens particulier (assiduité en
+   alerte, certificats expirés...) gardent leur couleur via un style
+   inline qui prend le dessus sur cette règle. */
+.kpi-v{font-size:26px;font-weight:700;color:var(--txt);line-height:1;}
 .kpi-l{font-size:11px;color:var(--txt-muted);margin-top:5px;}
 
 /* ══ INPUTS ══ */

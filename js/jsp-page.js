@@ -308,7 +308,7 @@ function renderAccueil(){
     var medals = ['🥇','🥈','🥉'];
 
     html += '<div class="stats-card" style="padding:14px;">'
-      +'<h3 style="margin-bottom:2px;color:var(--sdis-or)">🏅 '+esc(sp.epreuve)+'</h3>'
+      +'<h3 style="margin-bottom:2px;color:var(--txt)">🏅 '+esc(sp.epreuve)+'</h3>'
       +'<div style="font-size:11px;color:var(--txt-muted);margin-bottom:10px;">'
       +new Date(sp.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+'</div>'
       +'<div style="display:flex;flex-direction:column;gap:5px;">'
@@ -335,7 +335,7 @@ function renderAccueil(){
     var joursConc = Math.round((new Date(prochainConc.date)-now)/86400000);
     var dConc = new Date(prochainConc.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'long'});
     var concUrgCol = joursConc<=7?'var(--sdis-or)':'var(--sdis-bleu)';
-    html += '<h3 style="margin-bottom:8px;color:var(--sdis-or)">🏆 Prochain concours</h3>'
+    html += '<h3 style="margin-bottom:8px;color:var(--txt)">🏆 Prochain concours</h3>'
       +'<div style="font-size:14px;font-weight:700;margin-bottom:3px;">'+prochainConc.titre+'</div>'
       +'<div style="font-size:12px;color:var(--txt-muted);margin-bottom:8px;">'+dConc+'</div>'
       +'<div style="display:flex;align-items:center;gap:6px;font-size:12px;">'
@@ -343,7 +343,7 @@ function renderAccueil(){
       +(prochainConc.equipe&&prochainConc.equipe.length?'<span style="color:var(--txt-muted)">'+prochainConc.equipe.length+' JSP sélectionnés</span>':'')
       +'</div>';
   } else {
-    html += '<h3 style="margin-bottom:8px;color:var(--sdis-or)">🏆 Concours</h3>'
+    html += '<h3 style="margin-bottom:8px;color:var(--txt)">🏆 Concours</h3>'
       +'<div style="font-size:13px;color:var(--txt-muted);">Aucun concours à venir.</div>';
   }
   html += '<button class="btn btn-ghost btn-sm" style="margin-top:10px;font-size:11px;width:100%" onclick="showTab(\'concours\')">Concours →</button>'
@@ -358,9 +358,9 @@ function renderAccueil(){
   // Les tuiles JSP actifs/Séances/Assiduité/Formation sont déjà dans la
   // rangée "Cette saison" ci-dessus : on ne les répète pas ici.
   html += '<div class="stats-card" style="grid-column:span 2;padding:14px;">'
-    +'<h3 style="margin-bottom:12px;color:var(--sdis-or)">📊 Autres indicateurs — '+saison+'</h3>'
+    +'<h3 style="margin-bottom:12px;color:var(--txt)">📊 Autres indicateurs — '+saison+'</h3>'
     +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">'
-    +meteoTile('🏆', 'Concours', nbConcours, 5, '', 'var(--sdis-or)')
+    +meteoTile('🏆', 'Concours', nbConcours, 5, '', 'var(--sdis-bleu)')
     +meteoTile('📋', 'Notes manœuvre', nbNotes, Math.max(nbNotes,1), '', 'var(--sdis-bleu)')
     +meteoTile('🏥', 'Certifs valides', nbCertifOK, nbActifs||1, '/'+nbActifs, nbCertifOK===nbActifs?'var(--ok)':'var(--warn)')
     +meteoTile('📋', 'BNJSP', nbBrevet, nbActifs||1, '/'+nbActifs, 'var(--ok)')
