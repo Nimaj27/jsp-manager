@@ -918,12 +918,14 @@
      autre page, comme le bouton 📊 de la liste JSP ou de l'onglet Sport). -->
 <div class="modal-bg" id="modal-timeline">
   <div class="modal" style="max-width:680px;max-height:90vh;overflow-y:auto">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-      <h2 style="margin:0" id="timeline-titre">Timeline JSP</h2>
-      <div style="margin-left:auto;display:flex;gap:6px">
-        <button class="btn btn-blue btn-sm" id="timeline-print-btn" onclick="printFicheFromTimeline()">🖨️ Fiche PDF</button>
-        <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-timeline')">✕</button>
+    <!-- En-tête : avatar + nom + badges -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+      <div id="timeline-avatar" style="width:52px;height:52px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;box-shadow:0 0 0 2px var(--sdis-or)"></div>
+      <div style="min-width:0">
+        <h2 style="margin:0 0 4px" id="timeline-titre">Fiche JSP</h2>
+        <div id="timeline-badges" style="display:flex;gap:6px;flex-wrap:wrap"></div>
       </div>
+      <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="closeModal('modal-timeline')">✕</button>
     </div>
     <!-- KPIs -->
     <div class="kpi-row" id="timeline-kpi" style="margin-bottom:14px"></div>
@@ -931,10 +933,24 @@
     <div id="timeline-alertes" style="margin-bottom:10px"></div>
     <!-- Brevets -->
     <div id="timeline-brevets" style="margin-bottom:14px"></div>
+    <!-- Assiduité (visuel des dernières séances) -->
+    <div id="timeline-assiduite" style="margin-bottom:16px"></div>
+    <!-- Formation par cycle -->
+    <div id="timeline-formation-cycle" style="margin-bottom:16px"></div>
+    <!-- Dernières notes de manœuvre -->
+    <div id="timeline-notes-mano" style="margin-bottom:16px"></div>
     <!-- Contrôles récents + meilleurs résultats sport -->
-    <div id="timeline-controle-sport" style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)"></div>
-    <!-- Timeline events -->
-    <div id="timeline-content"></div>
+    <div id="timeline-controle-sport" style="margin-bottom:10px"></div>
+    <!-- Historique complet (replié par défaut) -->
+    <div style="margin-bottom:6px">
+      <button class="btn btn-ghost btn-sm" onclick="toggleTimelineHistorique()" id="timeline-historique-toggle">📜 Voir l'historique complet ▾</button>
+    </div>
+    <div id="timeline-content" style="display:none"></div>
+    <!-- Actions -->
+    <div style="display:flex;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+      <button class="btn btn-ghost" style="flex:1" id="timeline-print-btn" onclick="printFicheFromTimeline()">🖨️ Fiche imprimable</button>
+      <button class="btn btn-primary" style="flex:1" id="timeline-edit-btn">✏️ Modifier la fiche</button>
+    </div>
   </div>
 </div>
 
