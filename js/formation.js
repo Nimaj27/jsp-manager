@@ -165,7 +165,7 @@ function renderFormation(){
       + '<span style="margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--txt-muted)">'+cyPct+'%'
       + '<span class="pbar" style="width:70px"><span class="pbar-fill" style="width:'+cyPct+'%;background:'+cyCol+'"></span></span></span></h3>';
     Object.entries(byMod).forEach(([mod,items])=>{
-      html += '<div style="margin:10px 0 4px;font-size:11px;font-weight:700;color:var(--sdis-or);text-transform:uppercase;letter-spacing:.04em">'+esc(mod)+'</div>';
+      html += '<div style="margin:10px 0 4px;font-size:11px;font-weight:700;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.04em">'+esc(mod)+'</div>';
       items.forEach(it=>{
         const e = evals[evalKey(jspId,cy,it.idx)];
         const st = statutFromEval(e);

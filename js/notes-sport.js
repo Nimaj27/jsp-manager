@@ -37,7 +37,7 @@ function openNotesManModal(type, refId){
   var existing=notesMan.filter(function(n){return n.type===type&&n.refId===+refId;});
   document.getElementById('notesman-jsp-list').innerHTML=jsps.map(function(j){
     var hn=existing.find(function(n){return n.jspId===j.id;});
-    var nl=hn&&hn.note!==null?' <strong style="color:var(--sdis-or)">'+hn.note+'/20</strong>':'';
+    var nl=hn&&hn.note!==null?' <strong style="color:var(--txt)">'+hn.note+'/20</strong>':'';
     return '<button onclick="openNotesManJsp('+j.id+')" style="display:flex;align-items:center;gap:6px;padding:6px 10px;'
       +'background:'+(hn?'rgba(0,48,135,.2)':'var(--card)')+';border:1px solid '+(hn?'var(--sdis-bleu)':'var(--border)')+';'
       +'border-radius:var(--radius-sm);cursor:pointer;font-size:12px;color:var(--txt);">'
