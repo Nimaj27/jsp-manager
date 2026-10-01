@@ -286,15 +286,22 @@ table.tbl tr:hover td{background:var(--card);}
   .lcard-date{min-width:auto;font-size:11px;}
   .lcard-actions{gap:2px;}
   .lcard-actions .btn-icon{padding:8px;min-width:36px;min-height:36px;}
-  /* Tableaux */
-  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-  table.tbl{font-size:12px;}
-  table.tbl th,table.tbl td{padding:6px 8px;}
-  /* Colonne "Statut" du tableau JSP uniquement — cette règle était
-     globale à tous les .tbl et masquait aussi la 3ᵉ colonne d'autres
-     tableaux (résultats ICP, contrôles, classements sport...) sur les
-     téléphones en portrait, sans que rien ne l'indique. */
-  #jsp-list-table th:nth-child(3),#jsp-list-table td:nth-child(3){display:none;}
+  /* Tableaux → cartes verticales. Plus de défilement horizontal ni de
+     colonne masquée en douce : chaque ligne devient une carte, chaque
+     cellule affiche l'intitulé de sa colonne via data-label (posé
+     automatiquement par applyMobileCardLabels(), voir data-layer.js). */
+  .tbl-wrap{overflow:visible;background:transparent;border:none;border-radius:0;}
+  table.tbl,table.tbl thead,table.tbl tbody,table.tbl tr,table.tbl th,table.tbl td{display:block;}
+  table.tbl thead{display:none;}
+  table.tbl tr{background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;padding:2px 12px;}
+  table.tbl tr:hover td{background:transparent;}
+  table.tbl td{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);text-align:right;font-size:13px;}
+  table.tbl tr td:last-child{border-bottom:none;}
+  table.tbl td::before{content:attr(data-label);font-size:10px;font-weight:700;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.03em;text-align:left;flex-shrink:0;}
+  table.tbl td:not([data-label])::before{content:none;}
+  /* Colonne "Statut" du tableau JSP uniquement (gardée hors des cartes,
+     comme avant le passage aux tableaux responsives). */
+  #jsp-list-table td:nth-child(3){display:none;}
   /* Sous-onglets */
   .ctab{padding:8px 10px;font-size:11px;white-space:nowrap;}
   /* Filtres */

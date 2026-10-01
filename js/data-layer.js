@@ -437,6 +437,46 @@ function esc(v){
   });
 }
 
+// ── Tableaux → cartes sur mobile ──────────────────────────────
+// Pose un data-label (texte de l'en-tête de colonne) sur chaque cellule
+// de chaque table.tbl, pour que le CSS @media(max-width:640px) puisse
+// transformer n'importe quel tableau de l'appli en cartes verticales
+// sans dupliquer le rendu de chaque page. Les sous-éléments (ex: unité
+// d'une colonne ICP affichée sous l'intitulé) sont ignorés pour garder
+// un libellé court.
+function applyMobileCardLabels(){
+  document.querySelectorAll('table.tbl').forEach(function(table){
+    var headers = Array.prototype.map.call(table.querySelectorAll('thead th'), function(th){
+      var clone = th.cloneNode(true);
+      clone.querySelectorAll('span,small,br').forEach(function(s){ s.remove(); });
+      return clone.textContent.trim();
+    });
+    if(!headers.length) return;
+    table.querySelectorAll('tbody tr').forEach(function(tr){
+      Array.prototype.forEach.call(tr.children, function(td, i){
+        if(headers[i]) td.setAttribute('data-label', headers[i]);
+        else td.removeAttribute('data-label');
+      });
+    });
+  });
+}
+
+// Les tableaux sont reconstruits (innerHTML) par des dizaines de
+// fonctions render* différentes : plutôt que d'appeler
+// applyMobileCardLabels() depuis chacune, on observe le DOM et on la
+// relance (au prochain frame, pour grouper les changements rapprochés)
+// dès qu'un tableau apparaît ou change.
+(function(){
+  var scheduled = false;
+  var observer = new MutationObserver(function(){
+    if(scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(function(){ scheduled = false; applyMobileCardLabels(); });
+  });
+  observer.observe(document.body, {childList:true, subtree:true});
+  applyMobileCardLabels();
+})();
+
 function getJSP(id){ return JSPs.find(j=>j.id===id); }
 function getSaison(){
   return getSaisonFromDate(new Date());
