@@ -395,19 +395,25 @@ function openTimeline(jspId){
   loadNotesMan();
   var myNotes = notesMan.filter(function(n){return n.jspId===jspId&&n.note!==null;});
   var moyNote = myNotes.length?Math.round(myNotes.reduce(function(a,n){return a+n.note;},0)/myNotes.length*10)/10:null;
+  var myControlesKpi = controles.filter(function(c){return c.resultats&&c.resultats[jspId]!==undefined;});
+  var moyControle = myControlesKpi.length?Math.round(myControlesKpi.reduce(function(a,c){return a+c.resultats[jspId];},0)/myControlesKpi.length*10)/10:null;
 
   document.getElementById('timeline-kpi').innerHTML =
     '<div class="kpi"><div class="kpi-v" style="color:'+assidCol+'">'+(assid!==null?assid+'%':'—')+'</div><div class="kpi-l">Assiduité</div></div>'+
     '<div class="kpi"><div class="kpi-v">'+nbPres+'/'+nbSeances+'</div><div class="kpi-l">Présences</div></div>'+
     '<div class="kpi"><div class="kpi-v">'+myConc+'</div><div class="kpi-l">Concours</div></div>'+
     '<div class="kpi"><div class="kpi-v">'+progPct+'%</div><div class="kpi-l">Formation</div></div>'+
-    '<div class="kpi"><div class="kpi-v">'+(moyNote!==null?moyNote+'/20':'—')+'</div><div class="kpi-l">Moy. manœuvre</div></div>';
+    '<div class="kpi"><div class="kpi-v">'+(moyNote!==null?moyNote+'/20':'—')+'</div><div class="kpi-l">Moy. manœuvre</div></div>'+
+    '<div class="kpi"><div class="kpi-v">'+(moyControle!==null?moyControle+'/20':'—')+'</div><div class="kpi-l">Moy. contrôle</div></div>';
 
   // Alertes individuelles
   renderAlerteJsp(jspId, 'timeline-alertes');
 
   // Brevets
   renderBrevets(jspId, 'timeline-brevets');
+
+  // Contrôles récents + meilleurs résultats sport (vue unifiée)
+  renderControleSport(jspId, 'timeline-controle-sport');
 
   // Timeline événements
   renderTimelineEvents(jspId);
@@ -446,6 +452,50 @@ function renderBrevets(jspId, elId){
         +(it.warnLabel?'<span style="color:'+border+';font-weight:700;font-size:11px"> ('+it.warnLabel+')</span>':'')
         +'</div>';
     }).join('')
+    +'</div>';
+}
+
+// Vue unifiée : dernières notes de contrôle + meilleurs résultats sport,
+// pour ne plus avoir à visiter séparément les onglets Contrôle et Sport
+// afin de connaître la situation complète d'un JSP (revue UX).
+function renderControleSport(jspId, elId){
+  var el = document.getElementById(elId);
+  if(!el) return;
+
+  var myControles = controles.filter(function(c){return c.resultats&&c.resultats[jspId]!==undefined;})
+    .sort(function(a,b){return b.date.localeCompare(a.date);}).slice(0,3);
+  var controleHtml = myControles.length ? myControles.map(function(c){
+    var v = c.resultats[jspId];
+    var seuil = c.seuil!=null?c.seuil:10;
+    var ok = v>=seuil;
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">'
+      +'<span style="font-size:12.5px">'+esc(c.theme||'Contrôle')+'</span>'
+      +'<span style="display:flex;align-items:center;gap:8px"><strong style="font-size:13px">'+v+'/20</strong>'
+      +'<span class="badge '+(ok?'badge-green':'badge-red')+'" style="font-size:9px">'+(ok?'Réussi':'Échoué')+'</span></span></div>';
+  }).join('') : '<div style="font-size:12px;color:var(--txt-muted)">Aucun contrôle enregistré.</div>';
+
+  var eps = {};
+  sports.forEach(function(s){
+    var v = s.resultats && s.resultats[jspId]!==undefined ? parseFloat(s.resultats[jspId]) : null;
+    if(v===null||isNaN(v)) return;
+    if(!eps[s.epreuve] || v>eps[s.epreuve].v){ eps[s.epreuve] = {v:v, unite:s.unite||''}; }
+  });
+  var sportKeys = Object.keys(eps);
+  var sportHtml = sportKeys.length ? sportKeys.map(function(k){
+    return '<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;min-width:96px">'
+      +'<div style="font-size:10.5px;color:var(--txt-muted)">'+esc(k)+'</div>'
+      +'<div style="font-size:14px;font-weight:700">'+eps[k].v+' '+esc(eps[k].unite)+'</div></div>';
+  }).join('') : '<div style="font-size:12px;color:var(--txt-muted)">Aucun résultat sportif.</div>';
+
+  el.innerHTML = '<div style="display:flex;gap:16px;flex-wrap:wrap">'
+    +'<div style="flex:1;min-width:220px">'
+    +'<div style="font-size:11px;font-weight:700;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">📋 Contrôles récents</div>'
+    +controleHtml
+    +'</div>'
+    +'<div style="flex:1;min-width:220px">'
+    +'<div style="font-size:11px;font-weight:700;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">🏃 Sport — meilleurs résultats</div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+sportHtml+'</div>'
+    +'</div>'
     +'</div>';
 }
 

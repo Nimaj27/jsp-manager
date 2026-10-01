@@ -888,26 +888,6 @@
       </div>
     </div>
   </div>
-  <!-- Modal timeline JSP -->
-  <div class="modal-bg" id="modal-timeline">
-    <div class="modal" style="max-width:680px;max-height:90vh;overflow-y:auto">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-        <h2 style="margin:0" id="timeline-titre">Timeline JSP</h2>
-        <div style="margin-left:auto;display:flex;gap:6px">
-          <button class="btn btn-blue btn-sm" id="timeline-print-btn" onclick="printFicheFromTimeline()">🖨️ Fiche PDF</button>
-          <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-timeline')">✕</button>
-        </div>
-      </div>
-      <!-- KPIs -->
-      <div class="kpi-row" id="timeline-kpi" style="margin-bottom:14px"></div>
-      <!-- Alertes JSP -->
-      <div id="timeline-alertes" style="margin-bottom:10px"></div>
-      <!-- Brevets -->
-      <div id="timeline-brevets" style="margin-bottom:14px"></div>
-      <!-- Timeline events -->
-      <div id="timeline-content"></div>
-    </div>
-  </div>
   <div class="vtab-page" id="vtab-jspannee">
     <div id="jspannee-content"></div>
   </div>
@@ -931,6 +911,31 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Modal timeline JSP — hors de page-suivi (voir commit : nichée dans un
+     .page masqué, elle ne s'affichait jamais quand on l'ouvrait depuis une
+     autre page, comme le bouton 📊 de la liste JSP ou de l'onglet Sport). -->
+<div class="modal-bg" id="modal-timeline">
+  <div class="modal" style="max-width:680px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <h2 style="margin:0" id="timeline-titre">Timeline JSP</h2>
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <button class="btn btn-blue btn-sm" id="timeline-print-btn" onclick="printFicheFromTimeline()">🖨️ Fiche PDF</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-timeline')">✕</button>
+      </div>
+    </div>
+    <!-- KPIs -->
+    <div class="kpi-row" id="timeline-kpi" style="margin-bottom:14px"></div>
+    <!-- Alertes JSP -->
+    <div id="timeline-alertes" style="margin-bottom:10px"></div>
+    <!-- Brevets -->
+    <div id="timeline-brevets" style="margin-bottom:14px"></div>
+    <!-- Contrôles récents + meilleurs résultats sport -->
+    <div id="timeline-controle-sport" style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)"></div>
+    <!-- Timeline events -->
+    <div id="timeline-content"></div>
   </div>
 </div>
 
