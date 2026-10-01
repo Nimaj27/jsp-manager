@@ -146,6 +146,22 @@ service cloud.firestore {
       allow write: if canEditSection();
     }
 
+    // ── public_notes_jsp/{compositeId} : notes personnelles ─────────────
+    // Un document PAR JSP, à l'adresse {sectionId}_{jspId}_{pin} — jamais un
+    // miroir commun à tous les JSP (ça exposerait les notes de tout le
+    // monde dès la première lecture, PIN ou pas). Sans connaître le PIN
+    // exact d'un JSP, impossible de deviner l'adresse de son document ;
+    // et faute de `list` autorisé ci-dessous, la collection n'est pas
+    // énumérable. Comme pour public_cours, ce n'est pas une sécurité
+    // cryptographique — mais contrairement à un miroir commun, un accès
+    // direct à Firestore ne donne ici que les notes d'un seul JSP à la fois,
+    // et seulement si son PIN est déjà connu.
+    match /public_notes_jsp/{compositeId} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if canEditSection();
+    }
+
     // Tout le reste est refusé par défaut.
     match /{document=**} {
       allow read, write: if false;
