@@ -128,6 +128,7 @@
   <button class="tab-btn active" id="tab-btn-planning" onclick="showPublicTab('planning')">📅 Planning</button>
   <button class="tab-btn" id="tab-btn-cours" onclick="showPublicTab('cours')">📚 Cours <span class="tab-lock" id="lock-cours">🔒</span></button>
   <button class="tab-btn" id="tab-btn-controles" onclick="showPublicTab('controles')">📋 Contrôles <span class="tab-lock" id="lock-controles">🔒</span></button>
+  <button class="tab-btn" id="tab-btn-notes" onclick="showPublicTab('notes')">📊 Notes <span class="tab-lock" id="lock-notes">🔒</span></button>
 </div>
 <div class="container">
   <div id="tab-planning">
@@ -148,6 +149,14 @@
   </div>
   <div id="tab-controles" style="display:none">
     <div id="controles-public-content">
+      <div class="loading">
+        <div class="spinner"></div>
+        Chargement...
+      </div>
+    </div>
+  </div>
+  <div id="tab-notes" style="display:none">
+    <div id="notes-public-content">
       <div class="loading">
         <div class="spinner"></div>
         Chargement...
@@ -176,6 +185,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
+const SECTION_ID = 'pacy'; // doit correspondre à SECTION_ID dans js/data-layer.js
 
 // Vacances scolaires Normandie Zone B
 const VACANCES = [
@@ -307,6 +317,7 @@ function updateTabLocks(){
   const show = coursUnlockedJsp ? 'none' : '';
   document.getElementById('lock-cours').style.display = show;
   document.getElementById('lock-controles').style.display = show;
+  document.getElementById('lock-notes').style.display = show;
 }
 
 function renderAuthBanner(){
@@ -323,6 +334,7 @@ window.changeIdentity = function(){
   updateTabLocks();
   renderCoursPinScreen();
   renderControlesTab();
+  subscribeMesNotes();
 };
 
 function renderCoursPinScreen(){
@@ -351,6 +363,7 @@ function renderCoursPinScreen(){
     updateTabLocks();
     renderCoursList();
     renderControlesTab();
+    subscribeMesNotes();
   };
   document.getElementById('pin-submit').onclick = submit;
   document.getElementById('pin-code').onkeydown = (e) => { if(e.key === 'Enter') submit(); };
@@ -382,11 +395,14 @@ onSnapshot(doc(db, 'public_cours', 'pacy'), snap => {
     return;
   }
   coursPublicData = snap.data();
+  const wasUnlocked = !!coursUnlockedJsp;
   tryAutoUnlock();
   updateTabLocks();
   if(coursUnlockedJsp) renderCoursList();
   else renderCoursPinScreen();
   renderControlesTab();
+  if(coursUnlockedJsp && !wasUnlocked) subscribeMesNotes();
+  renderMesNotes();
 }, err => {
   coursContent.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>Impossible de charger les cours.<br><small>' + err.message + '</small></div>';
 });
@@ -434,15 +450,83 @@ onSnapshot(doc(db, 'public_controles', 'pacy'), snap => {
   controlesContent.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>Impossible de charger les contrôles.<br><small>' + err.message + '</small></div>';
 });
 
-// ── Bascule d'onglet (planning / cours / contrôles) ─────────────────────
+// ── Onglet Mes notes (miroir public restreint public_notes_jsp) ────────
+// Réutilise le même déverrouillage par code PIN (coursUnlockedJsp) — voir
+// publishPublicNotesJsp() dans js/data-layer.js : un document par JSP, à
+// une adresse qui intègre son PIN, jamais un miroir commun qui exposerait
+// les notes de tout le monde d'un coup.
+let notesJspData = null;
+let notesJspUnsub = null;
+const notesContent = document.getElementById('notes-public-content');
+
+function subscribeMesNotes(){
+  if(notesJspUnsub){ notesJspUnsub(); notesJspUnsub = null; }
+  notesJspData = null;
+  if(!coursUnlockedJsp) return;
+  const docId = SECTION_ID+'_'+coursUnlockedJsp.id+'_'+coursUnlockedJsp.pin;
+  notesJspUnsub = onSnapshot(doc(db, 'public_notes_jsp', docId), snap => {
+    notesJspData = snap.exists() ? snap.data() : {controles:[], notesMan:[], assiduite:null};
+    renderMesNotes();
+  }, err => {
+    notesContent.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>Impossible de charger tes notes.<br><small>' + err.message + '</small></div>';
+  });
+}
+
+function renderMesNotes(){
+  if(!coursUnlockedJsp){
+    notesContent.innerHTML = '<div class="empty"><div class="empty-icon">🔒</div>Connecte-toi d\'abord depuis l\'onglet Cours avec ton code PIN.<br><br>'
+      + '<a href="javascript:void(0)" onclick="showPublicTab(\'cours\')" class="cours-link">📚 Aller à l\'onglet Cours</a></div>';
+    return;
+  }
+  if(!notesJspData) return; // en attente du premier snapshot
+
+  let html = renderAuthBanner();
+
+  html += `<div class="section-title">📆 Assiduité</div>`;
+  html += `<div class="cours-card">${notesJspData.assiduite!=null ? '<strong style="font-size:18px">'+notesJspData.assiduite+'%</strong> de présence cette saison' : 'Pas encore de données cette saison.'}</div>`;
+
+  html += `<div class="section-title">📋 Mes contrôles</div>`;
+  const myControles = notesJspData.controles||[];
+  if(!myControles.length){
+    html += '<div class="empty"><div class="empty-icon">📋</div>Aucun contrôle noté pour le moment.</div>';
+  } else {
+    html += myControles.map(c => {
+      const ok = c.note >= (c.seuil!=null?c.seuil:10);
+      return `<div class="cours-card">
+        <div class="cours-titre">${esc(c.theme||'Contrôle')}</div>
+        <div class="cours-desc">${cap(formatDate(c.date))}</div>
+        <strong style="font-size:16px;color:${ok?'var(--ok)':'var(--danger)'}">${c.note}/20</strong>
+      </div>`;
+    }).join('');
+  }
+
+  html += `<div class="section-title">📝 Mes notes de manœuvre</div>`;
+  const myNotesMan = notesJspData.notesMan||[];
+  if(!myNotesMan.length){
+    html += '<div class="empty"><div class="empty-icon">📝</div>Aucune note de manœuvre pour le moment.</div>';
+  } else {
+    html += myNotesMan.map(n => `<div class="cours-card">
+      <div class="cours-titre">${esc(n.label)}</div>
+      <div class="cours-desc">${cap(formatDate(n.date))}</div>
+      <strong style="font-size:16px;color:var(--sdis-or)">${n.note}/20</strong>
+    </div>`).join('');
+  }
+
+  notesContent.innerHTML = html;
+}
+
+// ── Bascule d'onglet (planning / cours / contrôles / notes) ────────────
 window.showPublicTab = function(tab){
   document.getElementById('tab-planning').style.display = tab==='planning' ? '' : 'none';
   document.getElementById('tab-cours').style.display = tab==='cours' ? '' : 'none';
   document.getElementById('tab-controles').style.display = tab==='controles' ? '' : 'none';
+  document.getElementById('tab-notes').style.display = tab==='notes' ? '' : 'none';
   document.getElementById('tab-btn-planning').classList.toggle('active', tab==='planning');
   document.getElementById('tab-btn-cours').classList.toggle('active', tab==='cours');
   document.getElementById('tab-btn-controles').classList.toggle('active', tab==='controles');
+  document.getElementById('tab-btn-notes').classList.toggle('active', tab==='notes');
   if(tab==='controles') renderControlesTab();
+  if(tab==='notes') renderMesNotes();
 };
 
 // Lien direct vers l'onglet Cours (utilisé par cours_public.html en redirection)

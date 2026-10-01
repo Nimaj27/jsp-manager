@@ -83,6 +83,7 @@ async function save(){
     publishPublicCours();
     publishPublicPlanning();
     publishPublicControles();
+    publishPublicNotesJsp();
   } catch(e){
     console.warn('Firebase save error:', e.message);
     _saveFailed = true;
@@ -166,6 +167,51 @@ async function publishPublicControles(){
   } catch(e){ console.warn('Publish controles public error:', e.message); }
 }
 
+// ── Miroir public restreint : notes personnelles (jsp_public.html) ──
+// Un document PAR JSP, à une adresse qui intègre son PIN
+// (public_notes_jsp/{section}_{jspId}_{pin}) plutôt qu'un seul miroir
+// commun : un miroir unique aurait exposé les notes de tout le monde à
+// la première requête Firestore, PIN ou pas (le PIN ne filtre alors que
+// l'affichage, pas l'accès aux données). Ici, sans connaître le PIN
+// exact, impossible de deviner l'adresse du document d'un autre JSP —
+// et la liste de la collection n'est pas autorisée (pas de `list` dans
+// les règles), donc pas d'énumération possible. Ce n'est pas une
+// sécurité cryptographique — comme le reste de l'accès par code à 4
+// chiffres de cette appli — mais ça évite la fuite immédiate et totale
+// qu'un miroir commun aurait représentée.
+async function publishPublicNotesJsp(){
+  if(!window._fb || !window._fbUser) return;
+  const {db, doc, setDoc} = window._fb;
+  const saison = getSaison();
+  const actifs = JSPs.filter(j => j.statut!=='Licencié' && j.pin);
+  try {
+    await Promise.all(actifs.map(function(j){
+      const myControles = controles.filter(function(c){
+        return (!saison || c.saison===saison) && c.resultats && c.resultats[j.id]!==undefined;
+      }).map(function(c){
+        return { date: c.date||'', theme: c.theme||'', note: c.resultats[j.id], seuil: c.seuil!=null?c.seuil:10 };
+      }).sort(function(a,b){ return b.date.localeCompare(a.date); });
+
+      const myNotesMan = notesMan.filter(function(n){
+        return n.jspId===j.id && n.note!==null && (!saison || getSaisonFromDate(n.date)===saison);
+      }).map(function(n){
+        const src = n.type==='seance'
+          ? seances.find(function(s){ return s.id===n.refId; })
+          : concours.find(function(c){ return c.id===n.refId; });
+        return { date: n.date||'', label: src?(src.theme||src.type||src.titre||'Manœuvre'):'Manœuvre', note: n.note };
+      }).sort(function(a,b){ return b.date.localeCompare(a.date); });
+
+      return setDoc(doc(db, 'public_notes_jsp', SECTION_ID+'_'+j.id+'_'+j.pin), {
+        prenom: j.prenom || '',
+        assiduite: getAssiduite(j.id, saison),
+        controles: myControles,
+        notesMan: myNotesMan,
+        updatedAt: new Date().toISOString(),
+      });
+    }));
+  } catch(e){ console.warn('Publish notes JSP public error:', e.message); }
+}
+
 // ── Republication manuelle des miroirs publics ──────────────────────
 // save() republie déjà ces miroirs à chaque modification, mais un
 // changement de code (ex: un nouveau champ ajouté au miroir) ne se
@@ -173,7 +219,7 @@ async function publishPublicControles(){
 // bouton permet de forcer la republication sans attendre une
 // modification de données.
 async function republierPagesPubliques(){
-  await Promise.all([publishPublicCours(), publishPublicPlanning(), publishPublicControles()]);
+  await Promise.all([publishPublicCours(), publishPublicPlanning(), publishPublicControles(), publishPublicNotesJsp()]);
   showToast('✅ Pages publiques republiées');
 }
 
