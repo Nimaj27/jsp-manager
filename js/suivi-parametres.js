@@ -395,9 +395,12 @@ function renderJspAnnee(){
   // ── Podium top 3 ──────────────────────────────────────────
   var top3 = ranking.slice(0,3);
   var podiumOrder = top3.length>=3?[1,0,2]:top3.length===2?[1,0]:[0];
-  var podiumH = [160,200,130];
+  var podiumH = [200,160,130];
 
-  var podiumSvg = '<svg viewBox="0 0 460 240" style="width:100%;max-width:460px;display:block;margin:0 auto 20px" xmlns="http://www.w3.org/2000/svg">';
+  // viewBox décalé vers le haut (-40) pour laisser de la place à la
+  // médaille/au nom du 1er, dont la barre (la plus haute) poussait son
+  // étiquette au-dessus du cadre visible et la faisait disparaître.
+  var podiumSvg = '<svg viewBox="0 -40 460 280" style="width:100%;max-width:460px;display:block;margin:0 auto 20px" xmlns="http://www.w3.org/2000/svg">';
   var barW=100, gap=30, startX=(460-(podiumOrder.length*(barW+gap)-gap))/2;
   podiumOrder.forEach(function(ri,xi){
     var e=top3[ri]; if(!e) return;
