@@ -428,7 +428,10 @@ function renderPodium(){
       +'<text x="'+(x+barW/2)+'" y="'+(H-10)+'" text-anchor="middle" font-size="11" fill="rgba(255,255,255,.5)">'+(ri+1)+'</text>';
   }).join('');
 
-  var podiumSvg = '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;max-width:'+W+'px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg">'+bars+'</svg>';
+  // viewBox décalé vers le haut (-30) : la barre du 1er (la plus
+  // haute) poussait sinon sa médaille/son nom au-dessus du cadre
+  // visible, les faisant disparaître.
+  var podiumSvg = '<svg viewBox="0 -30 '+W+' '+(H+30)+'" style="width:100%;max-width:'+W+'px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg">'+bars+'</svg>';
 
   // Liste complète
   var liste = '<div style="margin-top:16px;"><table class="tbl" style="background:transparent">'
