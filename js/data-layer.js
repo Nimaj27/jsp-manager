@@ -184,32 +184,47 @@ async function publishPublicNotesJsp(){
   const {db, doc, setDoc} = window._fb;
   const saison = getSaison();
   const actifs = JSPs.filter(j => j.statut!=='Licencié' && j.pin);
-  try {
-    await Promise.all(actifs.map(function(j){
-      const myControles = controles.filter(function(c){
-        return (!saison || c.saison===saison) && c.resultats && c.resultats[j.id]!==undefined;
-      }).map(function(c){
-        return { date: c.date||'', theme: c.theme||'', note: c.resultats[j.id], seuil: c.seuil!=null?c.seuil:10 };
-      }).sort(function(a,b){ return b.date.localeCompare(a.date); });
 
-      const myNotesMan = notesMan.filter(function(n){
-        return n.jspId===j.id && n.note!==null && (!saison || getSaisonFromDate(n.date)===saison);
-      }).map(function(n){
-        const src = n.type==='seance'
-          ? seances.find(function(s){ return s.id===n.refId; })
-          : concours.find(function(c){ return c.id===n.refId; });
-        return { date: n.date||'', label: src?(src.theme||src.type||src.titre||'Manœuvre'):'Manœuvre', note: n.note };
-      }).sort(function(a,b){ return b.date.localeCompare(a.date); });
+  // Promise.allSettled plutôt que Promise.all : un document qui échoue
+  // (ex: valeur undefined refusée par Firestore pour un JSP en particulier)
+  // ne doit pas empêcher la publication des notes des autres JSP — vécu
+  // en prod avec publishPublicPlanning(), voir son commentaire plus haut.
+  const results = await Promise.allSettled(actifs.map(function(j){
+    const myControles = controles.filter(function(c){
+      return (!saison || c.saison===saison) && c.resultats && c.resultats[j.id]!==undefined;
+    }).map(function(c){
+      return {
+        date: c.date||'', theme: c.theme||'',
+        note: c.resultats[j.id]!=null ? c.resultats[j.id] : null,
+        seuil: c.seuil!=null?c.seuil:10,
+      };
+    }).sort(function(a,b){ return b.date.localeCompare(a.date); });
 
-      return setDoc(doc(db, 'public_notes_jsp', SECTION_ID+'_'+j.id+'_'+j.pin), {
-        prenom: j.prenom || '',
-        assiduite: getAssiduite(j.id, saison),
-        controles: myControles,
-        notesMan: myNotesMan,
-        updatedAt: new Date().toISOString(),
-      });
-    }));
-  } catch(e){ console.warn('Publish notes JSP public error:', e.message); }
+    const myNotesMan = notesMan.filter(function(n){
+      return n.jspId===j.id && n.note!==null && (!saison || getSaisonFromDate(n.date)===saison);
+    }).map(function(n){
+      const src = n.type==='seance'
+        ? seances.find(function(s){ return s.id===n.refId; })
+        : concours.find(function(c){ return c.id===n.refId; });
+      return {
+        date: n.date||'',
+        label: (src && (src.theme||src.type||src.titre)) || 'Manœuvre',
+        note: n.note!=null ? n.note : null,
+      };
+    }).sort(function(a,b){ return b.date.localeCompare(a.date); });
+
+    return setDoc(doc(db, 'public_notes_jsp', SECTION_ID+'_'+j.id+'_'+j.pin), {
+      prenom: j.prenom || '',
+      assiduite: getAssiduite(j.id, saison),
+      controles: myControles,
+      notesMan: myNotesMan,
+      updatedAt: new Date().toISOString(),
+    });
+  }));
+
+  results.forEach(function(r, i){
+    if(r.status==='rejected') console.warn('Publish notes JSP public error pour '+(actifs[i].nom||'')+' '+(actifs[i].prenom||'')+':', r.reason && r.reason.message);
+  });
 }
 
 // ── Republication manuelle des miroirs publics ──────────────────────
