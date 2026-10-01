@@ -470,8 +470,41 @@ function addSection(){
 }
 
 // ── Tabs ────────────────────────────────────────────────────
+// ── Navigation regroupée (4 catégories) ──────────────────────
+// Les onglets "Jeunes" et "Activités" en regroupent plusieurs : cliquer
+// la catégorie révèle sa ligne de sous-onglets (showTab() reste la seule
+// fonction qui change réellement de page, inchangée pour tout le reste
+// du code qui l'appelle directement).
+const NAV_GROUPS = {
+  jeunes:    ['jsp','formation','controle','cours'],
+  activites: ['seances','sport','concours','manoeuvre'],
+};
+
+function syncNavGroups(tab){
+  const groupKey = Object.keys(NAV_GROUPS).find(k => NAV_GROUPS[k].includes(tab));
+  document.querySelectorAll('.tab-group').forEach(function(g){
+    g.classList.toggle('active', g.dataset.group === groupKey);
+  });
+  document.querySelectorAll('.tabs-sub').forEach(function(row){
+    row.style.display = (row.dataset.group === groupKey) ? 'flex' : 'none';
+  });
+}
+
+function selectNavGroup(groupKey){
+  const tabs = NAV_GROUPS[groupKey];
+  if(!tabs) return;
+  const activePage = document.querySelector('.page.active');
+  const currentTab = activePage ? activePage.id.replace('page-','') : null;
+  if(tabs.includes(currentTab)){
+    syncNavGroups(currentTab); // révèle juste la ligne, sans changer de page
+  } else {
+    showTab(tabs[0]);
+  }
+}
+
 function showTab(tab){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab));
+  syncNavGroups(tab);
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+tab).classList.add('active');
   if(tab==='jsp')       renderJSP();
