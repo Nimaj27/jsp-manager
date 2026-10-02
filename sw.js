@@ -4,7 +4,7 @@
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
 
-const CACHE_NAME = 'jsp-manager-v7';
+const CACHE_NAME = 'jsp-manager-v8';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDSSMGVAQ2ygh2KjPVwePxBnq8_oO6Bzik",
@@ -60,7 +60,7 @@ self.addEventListener('install', function(event){
   event.waitUntil(
     caches.open(CACHE_NAME).then(function(cache){
       return cache.addAll([
-        './', 'index.html', 'manifest.json',
+        './', 'index.html', 'manifest.json', 'manifest-public.json',
         'jsp_public.html', 'guide.html', 'cours_public.html',
         'css/style.css',
         'js/firebase-init.js', 'js/header-actions.js',

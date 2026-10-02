@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0a0f1e">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mes séances JSP">
+  <link rel="manifest" href="manifest-public.json">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <title>JSP Pacy-sur-Eure — Planning</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
@@ -93,6 +99,12 @@
     .auth-banner span.who{flex:1;font-size:12.5px;font-weight:600;}
     .auth-banner a{font-size:10.5px;color:#7ab5f5;text-decoration:underline;flex-shrink:0;}
 
+    /* Installation PWA (icône sur l'écran d'accueil) */
+    .pwa-install-btn{display:none;align-items:center;gap:8px;justify-content:center;
+      width:calc(100% - 32px);max-width:608px;margin:0 auto 16px;background:var(--sdis-bleu);
+      color:#fff;border:none;border-radius:var(--radius);padding:11px 16px;font-size:13px;
+      font-weight:600;cursor:pointer;}
+
     /* Écran PIN */
     .pin-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
       padding:24px 20px;max-width:340px;margin:24px auto;text-align:center;}
@@ -166,6 +178,8 @@
     </div>
   </div>
 </div>
+
+<button class="pwa-install-btn" id="pwa-install-btn" onclick="installPWA()">📲 Installer sur l'écran d'accueil</button>
 
 <footer>
   Données en temps réel — <a href="index.html" target="_blank">Espace formateurs</a>
@@ -562,6 +576,33 @@ function markNotesSeen(){
 // Lien direct vers l'onglet Cours (utilisé par cours_public.html en redirection)
 const urlTab = new URLSearchParams(window.location.search).get('tab');
 if(urlTab === 'cours') showPublicTab('cours');
+
+// ── Installation sur l'écran d'accueil (PWA) ────────────────────────────
+// Manifest séparé (manifest-public.json, start_url: jsp_public.html) : un
+// jeune qui installe depuis ici ne doit jamais atterrir sur l'écran de
+// connexion formateur de l'appli principale.
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(err){ console.warn('SW échec:', err); });
+  });
+}
+let _deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  _deferredPrompt = e;
+  const btn = document.getElementById('pwa-install-btn');
+  if(btn) btn.style.display = 'flex';
+});
+window.addEventListener('appinstalled', function(){
+  _deferredPrompt = null;
+  const btn = document.getElementById('pwa-install-btn');
+  if(btn) btn.style.display = 'none';
+});
+window.installPWA = function(){
+  if(!_deferredPrompt) return;
+  _deferredPrompt.prompt();
+  _deferredPrompt.userChoice.then(function(){ _deferredPrompt = null; });
+};
 </script>
 </body>
 </html>
