@@ -213,18 +213,65 @@ async function publishPublicNotesJsp(){
       };
     }).sort(function(a,b){ return b.date.localeCompare(a.date); });
 
+    // Meilleur résultat par épreuve, même logique que renderControleSport()
+    // (js/seances-timeline.js) côté staff.
+    const bestByEpreuve = {};
+    sports.forEach(function(s){
+      const v = s.resultats && s.resultats[j.id]!==undefined ? parseFloat(s.resultats[j.id]) : NaN;
+      if(isNaN(v)) return;
+      if(!bestByEpreuve[s.epreuve] || v>bestByEpreuve[s.epreuve].valeur){
+        bestByEpreuve[s.epreuve] = { valeur: v, unite: s.unite||'' };
+      }
+    });
+    const mySport = Object.keys(bestByEpreuve).map(function(ep){
+      return { epreuve: ep, valeur: bestByEpreuve[ep].valeur, unite: bestByEpreuve[ep].unite };
+    });
+
     return setDoc(doc(db, 'public_notes_jsp', SECTION_ID+'_'+j.id+'_'+j.pin), {
       prenom: j.prenom || '',
       assiduite: getAssiduite(j.id, saison),
       controles: myControles,
       notesMan: myNotesMan,
+      sport: mySport,
       updatedAt: new Date().toISOString(),
     });
   }));
 
-  results.forEach(function(r, i){
-    if(r.status==='rejected') console.warn('Publish notes JSP public error pour '+(actifs[i].nom||'')+' '+(actifs[i].prenom||'')+':', r.reason && r.reason.message);
+  // Alerte visible pour le chef/formateur (pas juste en console) : un échec
+  // de publication signifie qu'un ou plusieurs JSP ne verront pas leurs
+  // notes à jour sur la page publique tant que ce n'est pas corrigé.
+  const echecs = results
+    .map(function(r,i){ return r.status==='rejected' ? {j:actifs[i], reason:r.reason} : null; })
+    .filter(Boolean);
+  echecs.forEach(function(e){
+    console.warn('Publish notes JSP public error pour '+(e.j.nom||'')+' '+(e.j.prenom||'')+':', e.reason && e.reason.message);
   });
+  if(echecs.length){
+    showNotesPublishError(echecs.map(function(e){ return (e.j.nom||'')+' '+(e.j.prenom||''); }));
+  } else {
+    dismissNotesPublishError();
+  }
+}
+
+// ── Alerte persistante : échec de publication des notes personnelles ──
+// Plus visible qu'un simple toast (voir showSaveError ci-dessus pour la
+// même logique) : un échec silencieux ici signifie que le(s) JSP concerné(s)
+// gardent des notes périmées sur la page publique sans que personne ne le
+// sache tant que ce bandeau n'apparaît pas.
+function showNotesPublishError(noms){
+  const el = document.getElementById('notes-publish-error-banner');
+  if(!el) return;
+  document.getElementById('notes-publish-error-text').textContent =
+    '⚠️ Les notes de '+noms.join(', ')+' n\'ont pas pu être republiées sur la page publique.';
+  el.style.display = 'flex';
+}
+function dismissNotesPublishError(){
+  const el = document.getElementById('notes-publish-error-banner');
+  if(el) el.style.display = 'none';
+}
+function retryNotesPublish(){
+  dismissNotesPublishError();
+  publishPublicNotesJsp();
 }
 
 // ── Republication manuelle des miroirs publics ──────────────────────
