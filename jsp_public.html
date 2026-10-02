@@ -78,11 +78,13 @@
 
     /* Onglets */
     .tabs-public{display:flex;gap:6px;max-width:640px;margin:14px auto 0;padding:0 16px;}
-    .tab-btn{flex:1;background:var(--panel);border:1px solid var(--border);color:var(--txt-muted);
+    .tab-btn{position:relative;flex:1;background:var(--panel);border:1px solid var(--border);color:var(--txt-muted);
       font-size:13px;font-weight:600;padding:10px;border-radius:var(--radius-sm);cursor:pointer;
       display:flex;align-items:center;justify-content:center;gap:6px;}
     .tab-btn.active{background:var(--sdis-bleu);color:#fff;border-color:var(--sdis-bleu);}
     .tab-lock{font-size:10px;margin-left:2px;}
+    .tab-new{position:absolute;top:-6px;right:-6px;background:var(--sdis-or);color:var(--sdis-bleu);
+      font-size:8.5px;font-weight:700;padding:1px 5px;border-radius:8px;letter-spacing:.02em;}
 
     /* Bannière d'identité (une fois le PIN validé — partagée Cours/Contrôles,
        voir changeIdentity() : évite de redemander le code en changeant d'onglet) */
@@ -128,7 +130,7 @@
   <button class="tab-btn active" id="tab-btn-planning" onclick="showPublicTab('planning')">📅 Planning</button>
   <button class="tab-btn" id="tab-btn-cours" onclick="showPublicTab('cours')">📚 Cours <span class="tab-lock" id="lock-cours">🔒</span></button>
   <button class="tab-btn" id="tab-btn-controles" onclick="showPublicTab('controles')">📋 Contrôles <span class="tab-lock" id="lock-controles">🔒</span></button>
-  <button class="tab-btn" id="tab-btn-notes" onclick="showPublicTab('notes')">📊 Notes <span class="tab-lock" id="lock-notes">🔒</span></button>
+  <button class="tab-btn" id="tab-btn-notes" onclick="showPublicTab('notes')">📊 Notes <span class="tab-lock" id="lock-notes">🔒</span><span class="tab-new" id="notes-new-badge" style="display:none">Nouveau</span></button>
 </div>
 <div class="container">
   <div id="tab-planning">
@@ -512,6 +514,19 @@ function renderMesNotes(){
     </div>`).join('');
   }
 
+  html += `<div class="section-title">🏃 Mes meilleurs résultats sport</div>`;
+  const mySport = notesJspData.sport||[];
+  if(!mySport.length){
+    html += '<div class="empty"><div class="empty-icon">🏃</div>Aucun résultat sportif pour le moment.</div>';
+  } else {
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      + mySport.map(s => `<div class="cours-card" style="flex:1;min-width:110px;margin-bottom:0">
+          <div style="font-size:11px;color:var(--txt-muted)">${esc(s.epreuve)}</div>
+          <div style="font-size:16px;font-weight:700">${s.valeur} ${esc(s.unite||'')}</div>
+        </div>`).join('')
+      + '</div>';
+  }
+
   notesContent.innerHTML = html;
 }
 
@@ -526,8 +541,23 @@ window.showPublicTab = function(tab){
   document.getElementById('tab-btn-controles').classList.toggle('active', tab==='controles');
   document.getElementById('tab-btn-notes').classList.toggle('active', tab==='notes');
   if(tab==='controles') renderControlesTab();
-  if(tab==='notes') renderMesNotes();
+  if(tab==='notes'){ renderMesNotes(); markNotesSeen(); }
 };
+
+// Badge "Nouveau" sur l'onglet Notes, tant qu'il n'a pas été ouvert au moins
+// une fois sur cet appareil.
+const NOTES_SEEN_KEY = 'jsp_public_notes_seen_pacy';
+function markNotesSeen(){
+  try{ localStorage.setItem(NOTES_SEEN_KEY, '1'); }catch(e){}
+  const badge = document.getElementById('notes-new-badge');
+  if(badge) badge.style.display = 'none';
+}
+(function initNotesBadge(){
+  let seen = false;
+  try{ seen = localStorage.getItem(NOTES_SEEN_KEY) === '1'; }catch(e){}
+  const badge = document.getElementById('notes-new-badge');
+  if(badge) badge.style.display = seen ? 'none' : '';
+})();
 
 // Lien direct vers l'onglet Cours (utilisé par cours_public.html en redirection)
 const urlTab = new URLSearchParams(window.location.search).get('tab');

@@ -3,9 +3,16 @@
 //  Pour ajouter une entrée : insérer un nouveau groupe en tête de
 //  CHANGELOG, avec la date du jour et la liste des changements.
 // ════════════════════════════════════════════════════════════
-const APP_VERSION = 'v5.4';
+const APP_VERSION = 'v5.5';
 
 const CHANGELOG = [
+  { date:'2026-10-02', items:[
+    'Nouveau : les jeunes peuvent consulter leurs propres notes (contrôles, manœuvre, assiduité, meilleurs résultats sportifs) sur la page publique, onglet "Notes" — jamais celles des autres.',
+    'Page publique : plus besoin de retaper son code PIN à chaque visite, il est mémorisé sur l\'appareil (avec un lien "Pas toi ?" pour en changer). Les onglets Cours/Contrôles/Notes affichent un 🔒 tant qu\'ils ne sont pas déverrouillés.',
+    'La navigation (Accueil/Jeunes/Activités/Suivi) est désormais intégrée directement dans le bandeau du haut.',
+    'Fiche JSP : nouvelle présentation avec badges (cycle, statut, podium JSP de l\'année), assiduité visuelle des dernières séances, formation détaillée par cycle et dernières notes de manœuvre.',
+    'Corrige un cas où la republication des notes personnelles d\'un JSP pouvait échouer silencieusement sans empêcher celle des autres, et sans alerte visible pour le formateur.',
+  ]},
   { date:'2026-09-26', items:[
     'Nouveau : onglet Contrôle pour saisir les contrôles de connaissances réguliers (thème, note /20 par JSP, seuil de réussite configurable).',
     'Les contrôles de connaissances comptent désormais dans le score du JSP de l\'année (nouvelle catégorie à 15%, les autres poids ont été réduits en proportion).',
