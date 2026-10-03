@@ -342,6 +342,14 @@ function renderSport(){
     }));
     const rank = Object.entries(best).map(([jid,v])=>({j:getJSP(+jid),v})).filter(e=>e.j).sort((a,b)=>b.v-a.v);
     const max = (rank[0]&&rank[0].v)||1;
+    const sessRows = [...sess].sort((a,b)=>b.date.localeCompare(a.date)).map(s=>{
+      const dateStr = new Date(s.date).toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'short'});
+      const nb = Object.keys(s.resultats||{}).length;
+      return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12.5px">
+        <span style="flex:1;color:var(--txt-muted)">${dateStr} — ${nb} résultat${nb>1?'s':''}</span>
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="openSportModal(${s.id})" title="Modifier cette saisie">✏️</button>
+      </div>`;
+    }).join('');
     return `<div class="stats-card">
       <h3>${SPORT_ICON[ep]||'📋'} ${esc(ep)} <span style="font-weight:400;color:var(--txt-muted);font-size:11px">${sess.length} session(s)</span>
         <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="openSportModal(null,'${esc(ep)}')">＋ session</button></h3>
@@ -353,6 +361,10 @@ function renderSport(){
           <td style="width:90px"><span class="pbar" style="width:70px"><span class="pbar-fill" style="width:${Math.round(e.v/max*100)}%;background:var(--sdis-bleu-clair)"></span></span></td>
         </tr>`).join('')}</tbody>
       </table>
+      <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:700;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Sessions saisies — cliquer ✏️ pour corriger</div>
+        ${sessRows}
+      </div>
     </div>`;
   }).join('');
 }
