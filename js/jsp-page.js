@@ -508,6 +508,12 @@ function openJSPModal(id=null){ if(!checkAcces('all')) return;
   var jPC=document.getElementById('j-passage-cycle'); if(jPC) jPC.value=(j&&j.passageCycle)||'';
   var jCM=document.getElementById('j-certif-med'); if(jCM) jCM.value=(j&&j.certifMed)||'';
   var jPin=document.getElementById('j-pin'); if(jPin) jPin.value=(j&&j.pin)||genPinJSP();
+  var jTSH=document.getElementById('j-taille-sport-haut'); if(jTSH) jTSH.value=(j&&j.tailleSportHaut)||'';
+  var jTSB=document.getElementById('j-taille-sport-bas'); if(jTSB) jTSB.value=(j&&j.tailleSportBas)||'';
+  var jTPH=document.getElementById('j-taille-pompier-haut'); if(jTPH) jTPH.value=(j&&j.taillePompierHaut)||'';
+  var jTPB=document.getElementById('j-taille-pompier-bas'); if(jTPB) jTPB.value=(j&&j.taillePompierBas)||'';
+  var jTG=document.getElementById('j-taille-gants'); if(jTG) jTG.value=(j&&j.tailleGants)||'';
+  var jTPt=document.getElementById('j-taille-pointure'); if(jTPt) jTPt.value=(j&&j.taillePointure)||'';
   var jDel=document.getElementById('j-delete'); if(jDel) jDel.style.display=j?'inline-flex':'none';
   document.getElementById('modal-jsp').classList.add('open');
 }
@@ -535,7 +541,13 @@ function saveJSP(){ if(!checkAcces('all')) return;
     bnjsp: (document.getElementById('j-bnjsp')?document.getElementById('j-bnjsp').value:''),
     passageCycle: (document.getElementById('j-passage-cycle')?document.getElementById('j-passage-cycle').value:''),
     certifMed: document.getElementById('j-certif-med').value,
-    pin: (document.getElementById('j-pin')?document.getElementById('j-pin').value.trim():'')
+    pin: (document.getElementById('j-pin')?document.getElementById('j-pin').value.trim():''),
+    tailleSportHaut: (document.getElementById('j-taille-sport-haut')?document.getElementById('j-taille-sport-haut').value.trim():''),
+    tailleSportBas: (document.getElementById('j-taille-sport-bas')?document.getElementById('j-taille-sport-bas').value.trim():''),
+    taillePompierHaut: (document.getElementById('j-taille-pompier-haut')?document.getElementById('j-taille-pompier-haut').value.trim():''),
+    taillePompierBas: (document.getElementById('j-taille-pompier-bas')?document.getElementById('j-taille-pompier-bas').value.trim():''),
+    tailleGants: (document.getElementById('j-taille-gants')?document.getElementById('j-taille-gants').value.trim():''),
+    taillePointure: (document.getElementById('j-taille-pointure')?document.getElementById('j-taille-pointure').value.trim():'')
   };
   if(id){ const i=JSPs.findIndex(j=>j.id===+id); JSPs[i]={...JSPs[i],...data}; }
   else { data.id=Date.now(); JSPs.push(data); }

@@ -933,6 +933,8 @@
     <div id="timeline-alertes" style="margin-bottom:10px"></div>
     <!-- Brevets -->
     <div id="timeline-brevets" style="margin-bottom:14px"></div>
+    <!-- Tailles de tenues -->
+    <div id="timeline-tailles" style="margin-bottom:14px"></div>
     <!-- Assiduité (visuel des dernières séances) -->
     <div id="timeline-assiduite" style="margin-bottom:16px"></div>
     <!-- Formation par cycle -->
@@ -1015,6 +1017,19 @@
         <input type="text" id="j-pin" maxlength="4" inputmode="numeric" placeholder="ex: 4821" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--txt);padding:6px 10px;font-size:13px;outline:none;flex:1">
         <button type="button" class="btn btn-ghost btn-sm" onclick="regenPinJSP()">🎲 Régénérer</button>
       </div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 4px">👕 Tailles de tenues</div>
+    <div class="field-row">
+      <div class="field"><label>🏃 Tenue sport — Haut</label><input type="text" id="j-taille-sport-haut" placeholder="ex: 12 ans"></div>
+      <div class="field"><label>🏃 Tenue sport — Bas</label><input type="text" id="j-taille-sport-bas" placeholder="ex: 12 ans"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>🧯 Tenue pompier — Haut</label><input type="text" id="j-taille-pompier-haut" placeholder="ex: M"></div>
+      <div class="field"><label>🧯 Tenue pompier — Bas</label><input type="text" id="j-taille-pompier-bas" placeholder="ex: M"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>🧤 Gants</label><input type="text" id="j-taille-gants" placeholder="ex: S"></div>
+      <div class="field"><label>👢 Chaussures (pointure)</label><input type="text" id="j-taille-pointure" placeholder="ex: 38"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-danger" id="j-delete" onclick="deleteJSP()" style="display:none">🗑️ Supprimer</button>
