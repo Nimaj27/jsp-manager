@@ -440,6 +440,24 @@ function printFiche(jspId){
   },0);
   var progPct = allComps ? Math.round(allValid/allComps*100) : 0;
 
+  // ── Tailles de tenues ─────────────────────────────────────
+  var taillesSection = '';
+  var tailles = [
+    ['Sport — Haut', jsp.tailleSportHaut],
+    ['Sport — Bas', jsp.tailleSportBas],
+    ['Pompier — Haut', jsp.taillePompierHaut],
+    ['Pompier — Bas', jsp.taillePompierBas],
+    ['Gants', jsp.tailleGants],
+    ['Chaussures', jsp.taillePointure],
+  ];
+  if(tailles.some(function(t){return t[1];})){
+    taillesSection = '<div class="info-grid" style="grid-template-columns:repeat(6,1fr)">'
+      +tailles.map(function(t){
+        return '<div class="info-item"><b>'+t[0]+'</b>'+(t[1]?esc(t[1]):'—')+'</div>';
+      }).join('')
+      +'</div>';
+  }
+
   // ── HTML final ────────────────────────────────────────────
   var html = '<!DOCTYPE html><html lang="fr"><head>'+'<title>Fiche '+esc(jsp.nom)+' '+esc(jsp.prenom)+'</title>'
     +'<style>'
@@ -477,6 +495,7 @@ function printFiche(jspId){
     +'<div class="info-item"><b>Section</b>'+(jsp.section||'—')+'</div>'
     +'<div class="info-item"><b>Cat\u00e9gorie</b>'+(jsp.categorie||'—')+' \u2014 Statut : '+(jsp.statut||'—')+'</div>'
     +'</div>'
+    + taillesSection
 
     +'<div class="kpi-row">'
     +'<div class="kpi"><div class="kpi-v" style="color:'+assidColor+'">'+(assidPct!==null?assidPct+'%':'—')+'</div><div class="kpi-l">Assiduit\u00e9 saison</div></div>'

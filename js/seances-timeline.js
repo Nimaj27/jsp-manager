@@ -435,6 +435,9 @@ function openTimeline(jspId){
   // Brevets
   renderBrevets(jspId, 'timeline-brevets');
 
+  // Tailles de tenues
+  renderTailles(jspId, 'timeline-tailles');
+
   // Assiduité : visuel des dernières séances
   renderAssiduiteBar(jspId, saison, 'timeline-assiduite');
 
@@ -572,6 +575,33 @@ function renderBrevets(jspId, elId){
         +it.icon+' <strong>'+esc(it.label)+'</strong> — '+dateStr
         +(it.warnLabel?'<span style="color:'+border+';font-weight:700;font-size:11px"> ('+it.warnLabel+')</span>':'')
         +'</div>';
+    }).join('')
+    +'</div>';
+}
+
+// Tailles de tenues (sport + pompier) — utile pour préparer une distribution
+// de tenues sans devoir rouvrir la fiche complète du JSP.
+function renderTailles(jspId, elId){
+  var j = getJSP(jspId);
+  var el = document.getElementById(elId);
+  if(!j || !el) return;
+
+  var tailles = [
+    {label:'Sport — Haut', v:j.tailleSportHaut},
+    {label:'Sport — Bas', v:j.tailleSportBas},
+    {label:'Pompier — Haut', v:j.taillePompierHaut},
+    {label:'Pompier — Bas', v:j.taillePompierBas},
+    {label:'Gants', v:j.tailleGants},
+    {label:'Chaussures', v:j.taillePointure},
+  ].filter(function(t){ return t.v; });
+
+  if(!tailles.length){ el.innerHTML=''; return; }
+
+  el.innerHTML = '<div style="font-size:11px;font-weight:700;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">👕 Tailles de tenues</div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;">'
+    +tailles.map(function(t){
+      return '<div style="padding:6px 10px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;">'
+        +'<span style="color:var(--txt-muted)">'+t.label+'</span> <strong>'+esc(t.v)+'</strong></div>';
     }).join('')
     +'</div>';
 }
